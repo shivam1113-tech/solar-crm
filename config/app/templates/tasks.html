@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tasks - Solar CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
+        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease; z-index: 1000; }
+        .sidebar.collapsed { width: 68px; }
+        .sidebar.collapsed .menu-label { display: none; }
+        .sidebar.collapsed .brand-text { display: none; }
+        .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
+        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; }
+        .brand span { color: #f59e0b; }
+        .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
+        .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
+        .menu a.active, .menu a:hover { background: #2563eb; color: white; }
+        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
+        .main.expanded { margin-left: 68px; }
+        .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999; }
+        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; }
+        .hamburger:hover { background: #f1f5f9; }
+        .admin-box { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
+        .content { padding: 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
+        .page-header h2 { font-weight: 800; margin-bottom: 5px; }
+        .add-btn { background: #2563eb; color: white; border: none; padding: 11px 20px; border-radius: 9px; text-decoration: none; font-size: 14px; }
+        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 22px; }
+        .footer { text-align: center; padding: 24px; color: #64748b; border-top: 1px solid #e5e7eb; background: white; margin-top: 26px; }
+        label { font-weight: 600; margin-bottom: 4px; display: block; }
+        .form-control, .form-select { border-radius: 10px; padding: 10px 14px; border: 1px solid #dbe3ef; width: 100%; }
+        .btn-save { background: #2563eb; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; cursor: pointer; }
+        .btn-cancel { background: white; color: #64748b; border: 1px solid #dbe3ef; padding: 12px 28px; border-radius: 10px; font-size: 15px; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+    <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
+   <div class="menu">
+        <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label">Dashboard</span></a>
+        <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
+        <a href="/tasks/" class="active"><i class="fa-solid fa-list-check"></i><span class="menu-label">Tasks</span></a>
+        <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+        <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
+        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
+        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
+        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
+        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
+        {% endif %}
+        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
+    </div>
+</div>
+<div class="main" id="main">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-3">
+            <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <strong style="font-size:18px;">Tasks</strong>
+        </div>
+        <div class="admin-box">
+            <i class="fa-regular fa-bell fs-5 text-muted"></i>
+            <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
+            <div><strong style="font-size:14px;">{{ request.user.username }}</strong><br><small class="text-muted">Admin</small></div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="page-header">
+            <div><h2>Tasks</h2><p class="text-muted mb-0">Manage your to-dos</p></div>
+            <a href="/tasks/add/" class="add-btn"><i class="fa-solid fa-plus"></i> Add Task</a>
+        </div>
+        {% if messages %}{% for msg in messages %}<div class="alert alert-success alert-dismissible fade show">{{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
+        <div class="panel">
+            {% if tasks %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light"><tr><th>Done</th><th>Title</th><th>Lead</th><th>Priority</th><th>Due Date</th><th>Actions</th></tr></thead>
+                    <tbody>{% for t in tasks %}
+                    <tr style="{% if t.completed %}opacity:0.5;{% endif %}">
+                        <td><a href="/tasks/{{ t.id }}/toggle/">{% if t.completed %}<i class="fa-solid fa-circle-check text-success fs-5"></i>{% else %}<i class="fa-regular fa-circle text-muted fs-5"></i>{% endif %}</a></td>
+                        <td><strong {% if t.completed %}style="text-decoration:line-through"{% endif %}>{{ t.title }}</strong><br><small class="text-muted">{{ t.description|truncatechars:50 }}</small></td>
+                        <td>{{ t.lead.name|default:"—" }}</td>
+                        <td><span class="badge bg-secondary">{{ t.priority }}</span></td>
+                        <td class="text-muted">{{ t.due_date|default:"—" }}</td>
+                       <td>
+    {% if request.user.is_superuser %}
+    <a href="/tasks/{{ t.id }}/delete/" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')">Delete</a>
+    {% else %}
+    <span class="text-muted">—</span>
+    {% endif %}
+</td>
+                    </tr>{% endfor %}</tbody>
+                </table>
+            </div>
+            {% else %}<div class="text-center py-5"><i class="fa-solid fa-list-check fa-3x text-muted mb-3"></i><p class="text-muted">No tasks yet.</p><a href="/tasks/add/" class="add-btn">+ Add First Task</a></div>{% endif %}
+        </div>
+    </div>
+    <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');document.getElementById('main').classList.toggle('expanded');}</script>
+<script>
+document.querySelectorAll('input[type="text"], input[type="email"], textarea').forEach(el => {
+    el.addEventListener('input', function() {
+        let pos = this.selectionStart;
+        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+        this.setSelectionRange(pos, pos);
+    });
+});
+</script>
+</body>
+</html>

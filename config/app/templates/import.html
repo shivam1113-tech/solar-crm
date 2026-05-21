@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Import Leads - Solar CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
+        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0;
+            background: linear-gradient(180deg, #071b36, #0b2547); color: white;
+            padding: 22px 14px; overflow-y: auto; }
+        .brand { font-size: 24px; font-weight: 800; margin-bottom: 28px;
+            display: flex; align-items: center; gap: 10px; }
+        .brand span { color: #f59e0b; }
+        .menu a { display: flex; align-items: center; gap: 14px; padding: 13px 14px;
+            margin-bottom: 8px; color: #dbeafe; text-decoration: none;
+            border-radius: 10px; font-size: 15px; }
+        .menu a.active, .menu a:hover { background: #2563eb; color: white; }
+        .main { margin-left: 245px; min-height: 100vh; }
+        .topbar { height: 72px; background: white; border-bottom: 1px solid #e5e7eb;
+            padding: 0 28px; display: flex; align-items: center; justify-content: space-between; }
+        .admin-box { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 42px; height: 42px; border-radius: 50%; background: #e0f2fe;
+            display: flex; align-items: center; justify-content: center;
+            color: #0369a1; font-weight: bold; }
+        .content { padding: 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
+        .page-header h2 { font-weight: 800; margin-bottom: 5px; }
+
+        /* Upload Card */
+        .upload-card { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 32px; max-width: 680px; }
+
+        /* Drop Zone */
+        .drop-zone { border: 2px dashed #93c5fd; border-radius: 14px; padding: 48px 24px;
+            text-align: center; background: #eff6ff; cursor: pointer; transition: all 0.2s; }
+        .drop-zone:hover, .drop-zone.dragover { border-color: #2563eb; background: #dbeafe; }
+        .drop-zone i { font-size: 48px; color: #2563eb; margin-bottom: 14px; display: block; }
+        .drop-zone p { margin: 0; color: #374151; font-size: 15px; }
+        .drop-zone small { color: #64748b; font-size: 13px; }
+        .drop-zone input[type="file"] { display: none; }
+
+        /* File type badges */
+        .file-types { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+        .ftype { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .ftype-csv  { background: #dcfce7; color: #15803d; }
+        .ftype-xlsx { background: #dbeafe; color: #1d4ed8; }
+        .ftype-xml  { background: #ffedd5; color: #c2410c; }
+
+        /* Selected file preview */
+        .file-preview { display: none; align-items: center; gap: 14px; background: #f0fdf4;
+            border: 1px solid #86efac; border-radius: 10px; padding: 14px 18px; margin-top: 16px; }
+        .file-preview i { color: #16a34a; font-size: 22px; }
+        .file-preview span { font-weight: 600; color: #15803d; }
+        .file-preview small { color: #64748b; display: block; font-size: 12px; }
+
+        /* Submit button */
+        .btn-import { background: #2563eb; color: white; border: none;
+            padding: 13px 32px; border-radius: 10px; font-size: 15px;
+            font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px;
+            transition: background 0.2s; }
+        .btn-import:hover { background: #1d4ed8; }
+        .btn-import:disabled { background: #93c5fd; cursor: not-allowed; }
+
+        /* Info box */
+        .info-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px;
+            padding: 18px 20px; margin-top: 24px; }
+        .info-box h6 { font-weight: 700; color: #92400e; margin-bottom: 10px; }
+        .info-box table { width: 100%; font-size: 13px; }
+        .info-box th { color: #64748b; font-weight: 600; padding: 4px 8px; }
+        .info-box td { color: #374151; padding: 4px 8px; }
+        .info-box code { background: #fef3c7; padding: 2px 6px; border-radius: 4px;
+            font-size: 12px; color: #92400e; }
+
+        .section-title { font-size: 13px; font-weight: 700; color: #9ca3af;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 18px; }
+
+        .footer { text-align: center; padding: 24px; color: #64748b;
+            border-top: 1px solid #e5e7eb; background: white; margin-top: 26px; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+    <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
+    <div class="menu">
+        <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label">Dashboard</span></a>
+        <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
+        <a href="/tasks/"><i class="fa-solid fa-list-check"></i><span class="menu-label">Tasks</span></a>
+        <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+        <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
+        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
+        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
+        <a href="/import/" class="active"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
+        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
+        {% endif %}
+        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
+    </div>
+</div>
+
+<div class="main" id="main">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-4">
+            <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <strong style="font-size:18px;">Import Leads</strong>
+        </div>
+        <div class="admin-box">
+            <i class="fa-regular fa-bell fs-5"></i>
+            <i class="fa-regular fa-envelope fs-5"></i>
+            <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
+            <div>
+                <strong>{{ request.user.username }}</strong><br>
+                <small class="text-muted">Admin</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <div class="page-header">
+            <div>
+                <h2>Import Leads</h2>
+                <p class="text-muted mb-0">Upload a CSV, Excel, or XML file to bulk import leads</p>
+            </div>
+            <a href="/leads/" style="background:white;color:#374151;border:1px solid #dbe3ef;
+                padding:11px 20px;border-radius:9px;text-decoration:none;font-weight:600;">
+                <i class="fa-solid fa-arrow-left"></i> Back to Leads
+            </a>
+        </div>
+
+        {% if messages %}
+            {% for msg in messages %}
+            <div class="alert alert-{{ msg.tags|default:'success' }} alert-dismissible fade show" role="alert">
+                {{ msg }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="upload-card">
+            <div class="section-title">Upload File</div>
+
+            <form method="POST" enctype="multipart/form-data" id="importForm">
+                {% csrf_token %}
+
+                <!-- Drop Zone -->
+                <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <p><strong>Click to upload</strong> or drag and drop your file here</p>
+                    <small>Supported formats below</small>
+                    <div class="file-types">
+                        <span class="ftype ftype-csv"><i class="fa-solid fa-file-csv"></i> CSV</span>
+                        <span class="ftype ftype-xlsx"><i class="fa-solid fa-file-excel"></i> Excel (.xlsx)</span>
+                        <span class="ftype ftype-xml"><i class="fa-solid fa-file-code"></i> XML</span>
+                    </div>
+                    <input type="file" id="fileInput" name="file" accept=".csv,.xlsx,.xls,.xml">
+                </div>
+
+                <!-- File Preview -->
+                <div class="file-preview" id="filePreview">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                    <div>
+                        <span id="fileName">filename.csv</span>
+                        <small id="fileSize">0 KB</small>
+                    </div>
+                    <button type="button" onclick="clearFile()"
+                        style="margin-left:auto;background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <button type="submit" class="btn-import" id="submitBtn" disabled>
+                    <i class="fa-solid fa-upload"></i> Import Leads
+                </button>
+            </form>
+
+            <!-- Format Guide -->
+            <div class="info-box">
+                <h6><i class="fa-solid fa-circle-info"></i> Required Column Names</h6>
+                <p style="font-size:13px;color:#92400e;margin-bottom:10px;">
+                    Your file must have these column headers (case-insensitive):
+                </p>
+                <table>
+                    <tr>
+                        <th>Column</th>
+                        <th>Required</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr><td><code>name</code></td><td>✅ Yes</td><td>Ramesh Patel</td></tr>
+                    <tr><td><code>email</code></td><td>✅ Yes</td><td>ramesh@example.com</td></tr>
+                    <tr><td><code>phone</code></td><td>✅ Yes</td><td>9876543210</td></tr>
+                    <tr><td><code>status</code></td><td>No (default: New)</td><td>Contacted</td></tr>
+                    <tr><td><code>budget</code></td><td>No (default: 0)</td><td>150000</td></tr>
+                    <tr><td><code>description</code></td><td>No</td><td>Interested in 5kW system</td></tr>
+                </table>
+
+                <div style="margin-top:14px;font-size:13px;color:#92400e;">
+                    <strong>XML format example:</strong>
+                    <pre style="background:#fef3c7;padding:10px;border-radius:8px;font-size:12px;margin-top:6px;">&lt;leads&gt;
+  &lt;lead&gt;
+    &lt;name&gt;Ramesh Patel&lt;/name&gt;
+    &lt;email&gt;ramesh@example.com&lt;/email&gt;
+    &lt;phone&gt;9876543210&lt;/phone&gt;
+    &lt;status&gt;New&lt;/status&gt;
+    &lt;budget&gt;150000&lt;/budget&gt;
+  &lt;/lead&gt;
+&lt;/leads&gt;</pre>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const submitBtn = document.getElementById('submitBtn');
+
+    fileInput.addEventListener('change', () => showPreview(fileInput.files[0]));
+
+    // Drag & Drop
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            fileInput.files = e.dataTransfer.files;
+            showPreview(file);
+        }
+    });
+
+    function showPreview(file) {
+        if (!file) return;
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+        filePreview.style.display = 'flex';
+        submitBtn.disabled = false;
+    }
+
+    function clearFile() {
+        fileInput.value = '';
+        filePreview.style.display = 'none';
+        submitBtn.disabled = true;
+    }
+</script>
+<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');document.getElementById('main').classList.toggle('expanded');}</script>
+</body>
+</html>

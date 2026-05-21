@@ -55,7 +55,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['app/templates'],
+        'DIRS': [BASE_DIR/'app'/'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -117,15 +117,19 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 # EMAIL CONFIGURATION (GMAIL)
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'satyarajsinhj72@gmail.com'
+EMAIL_HOST_PASSWORD = 'rhfk tukp lyyu ltuw'
+DEFAULT_FROM_EMAIL = 'satyarajsinhj72@gmail.com'
 
-EMAIL_HOST_USER = ''        # 👈 your gmail
-EMAIL_HOST_PASSWORD = ''      # 👈 app password (NOT normal password)
-SECRET_KEY = 'your-secret-key'
-import ssl
 
-EMAIL_SSL_CONTEXT = ssl._create_unverified_context()
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+import os
+import certifi
+
+os.environ['SSL_CERT_FILE'] = certifi.where()
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
