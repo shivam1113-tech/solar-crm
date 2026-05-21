@@ -1,6 +1,23 @@
-<<<<<<< HEAD
-# myproject
+# Solar CRM
 
-=======
-# solar-crm
->>>>>>> b74abe7f7ff837c4543e5050e5425b297a753e66
+Solar CRM project built using Django.
+
+## Features
+- Login System
+- Registration with OTP
+- Dashboard
+- Lead Management
+- Employee Management
+- Follow Ups
+- Projects
+- Customers
+- Quotes
+- Invoices
+
+## Technology Used
+- Python
+- Django
+- HTML
+- CSS
+- Bootstrap
+- SQLite
