@@ -158,14 +158,5 @@
         if (secs < 60) { timerEl.style.background = '#fff7ed'; timerEl.style.borderColor = '#fed7aa'; timerEl.style.color = '#c2410c'; }
     }, 1000);
 </script>
-<script>
-document.querySelectorAll('input[type="text"], input[type="email"], textarea').forEach(el => {
-    el.addEventListener('input', function() {
-        let pos = this.selectionStart;
-        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
-        this.setSelectionRange(pos, pos);
-    });
-});
-</script>
 </body>
 </html>

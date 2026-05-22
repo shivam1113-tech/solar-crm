@@ -66,5 +66,13 @@ path('forgot-password/', views.forgot_password, name='forgot_password'),
 path('verify-reset-otp/', views.verify_reset_otp, name='verify_reset_otp'),
 path('reset-password/', views.reset_password, name='reset_password'),
 
+# ================= AJAX =================
+path('ajax/dashboard-stats/', views.ajax_dashboard_stats, name='ajax_dashboard_stats'),
+path('ajax/lead/<int:id>/status/', views.ajax_change_lead_status, name='ajax_change_lead_status'),
+path('ajax/lead/<int:id>/delete/', views.ajax_delete_lead, name='ajax_delete_lead'),
+path('ajax/lead/add/', views.ajax_add_lead, name='ajax_add_lead'),
+path('ajax/notifications/', views.ajax_notifications, name='ajax_notifications'),
+path('ajax/search/', views.ajax_live_search, name='ajax_live_search'),
+
 ]
 

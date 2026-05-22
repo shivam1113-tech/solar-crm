@@ -573,6 +573,7 @@ def delete_employee(request, id):
     return redirect('employees')
 
 
+
 # ================= FORGOT PASSWORD =================
 
 def forgot_password(request):
@@ -582,42 +583,233 @@ def forgot_password(request):
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             return render(request, 'forgot.html', {'message': 'No account found with this email'})
+
         otp = str(random.randint(100000, 999999))
         request.session['reset_otp'] = otp
         request.session['reset_email'] = email
-        send_mail(
-            'Solar CRM - Password Reset OTP',
-            f'Your OTP for password reset is: {otp}\nValid for 10 minutes.',
-            settings.EMAIL_HOST_USER,
-            [email],
-            fail_silently=False,
-        )
-        print("Reset OTP:", otp)
+
+        try:
+            import ssl
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+
+            msg = MIMEMultipart()
+            msg['From'] = settings.EMAIL_HOST_USER
+            msg['To'] = email
+            msg['Subject'] = 'Solar CRM - Password Reset OTP'
+            body = f'Hi {user.username},\n\nYour OTP for password reset is: {otp}\n\nValid for 10 minutes.\n\nIf you did not request this, ignore this email.'
+            msg.attach(MIMEText(body, 'plain'))
+
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+
+            with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+                server.ehlo()
+                server.starttls(context=context)
+                server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+                server.sendmail(settings.EMAIL_HOST_USER, email, msg.as_string())
+
+        except Exception as e:
+            return render(request, 'forgot.html', {'message': f'Failed to send email: {str(e)}'})
+
         return redirect('verify_reset_otp')
     return render(request, 'forgot.html')
-
 
 def verify_reset_otp(request):
     if not request.session.get('reset_otp'):
         return redirect('forgot_password')
+    email = request.session.get('reset_email', '')
     if request.method == "POST":
         user_otp = request.POST.get('otp')
         if user_otp == request.session.get('reset_otp'):
+            # OTP correct — clear it so it can't be reused
+            del request.session['reset_otp']
             return redirect('reset_password')
-        return render(request, 'verify_reset_otp.html', {'message': 'Invalid OTP'})
-    return render(request, 'verify_reset_otp.html')
+        return render(request, 'forgot_verify.html', {
+            'message': 'Invalid OTP. Please try again.',
+            'email': email
+        })
+    return render(request, 'forgot_verify.html', {'email': email})
 
 
 def reset_password(request):
     if not request.session.get('reset_email'):
         return redirect('forgot_password')
     if request.method == "POST":
-        password = request.POST.get('password')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        if password1 != password2:
+            return render(request, 'reset_password.html', {'message': 'Passwords do not match'})
+        if len(password1) < 6:
+            return render(request, 'reset_password.html', {'message': 'Password must be at least 6 characters'})
         email = request.session.get('reset_email')
-        user = User.objects.get(email=email)
-        user.set_password(password)
-        user.save()
-        request.session.flush()
-        messages.success(request, "Password reset successful! Please login.")
-        return redirect('login')
+        try:
+            user = User.objects.get(email=email)
+            user.set_password(password1)
+            user.save()
+            request.session.flush()
+            messages.success(request, "Password reset successful! Please login.")
+            return redirect('login')
+        except User.DoesNotExist:
+            return render(request, 'reset_password.html', {'message': 'User not found'})
     return render(request, 'reset_password.html')
+
+# ================= AJAX VIEWS =================
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+@login_required
+def ajax_dashboard_stats(request):
+    if request.user.is_superuser:
+        all_leads = Lead.objects.all()
+    else:
+        all_leads = Lead.objects.filter(assigned_to=request.user)
+
+    data = {
+        'total_leads': all_leads.count(),
+        'new_leads': all_leads.filter(status='New').count(),
+        'contacted': all_leads.filter(status='Contacted').count(),
+        'qualified': all_leads.filter(status='Qualified').count(),
+        'proposal': all_leads.filter(status='Proposal').count(),
+        'total_deals': Quote.objects.filter(status='Accepted').count(),
+        'total_revenue': sum(Invoice.objects.filter(status='Paid').values_list('amount', flat=True)),
+    }
+    return JsonResponse(data)
+
+
+@login_required
+@require_POST
+def ajax_change_lead_status(request, id):
+    if not request.user.is_superuser:
+        lead = get_object_or_404(Lead, id=id, assigned_to=request.user)
+    else:
+        lead = get_object_or_404(Lead, id=id)
+    
+    new_status = request.POST.get('status')
+    valid = ['New', 'Contacted', 'Qualified', 'Proposal', 'Won', 'Lost']
+    if new_status not in valid:
+        return JsonResponse({'success': False, 'error': 'Invalid status'})
+    
+    lead.status = new_status
+    lead.save()
+    return JsonResponse({'success': True, 'status': new_status})
+
+
+@login_required
+@require_POST
+def ajax_delete_lead(request, id):
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+    lead = get_object_or_404(Lead, id=id)
+    lead.delete()
+    return JsonResponse({'success': True})
+
+
+@login_required
+@require_POST
+def ajax_add_lead(request):
+    try:
+        assigned_id = request.POST.get('assigned_to')
+        lead = Lead.objects.create(
+            name=request.POST.get('name'),
+            email=request.POST.get('email'),
+            phone=request.POST.get('phone'),
+            description=request.POST.get('description', ''),
+            status=request.POST.get('status', 'New'),
+            budget=request.POST.get('budget') or 0,
+            assigned_to=User.objects.filter(id=assigned_id).first() if assigned_id else None
+        )
+        return JsonResponse({
+            'success': True,
+            'lead': {
+                'id': lead.id,
+                'name': lead.name,
+                'email': lead.email,
+                'phone': lead.phone,
+                'status': lead.status,
+                'budget': str(lead.budget),
+                'date': lead.created_at.strftime('%d %b %Y'),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def ajax_notifications(request):
+    from django.utils import timezone
+    today = timezone.now().date()
+    
+    if request.user.is_superuser:
+        upcoming = FollowUp.objects.filter(
+            follow_up_date=today, done=False
+        ).values('id', 'title', 'follow_up_time', 'lead__name')[:5]
+        new_leads = Lead.objects.filter(
+            status='New'
+        ).order_by('-created_at').values('id', 'name', 'created_at')[:5]
+    else:
+        upcoming = FollowUp.objects.filter(
+            follow_up_date=today, done=False,
+            lead__assigned_to=request.user
+        ).values('id', 'title', 'follow_up_time', 'lead__name')[:5]
+        new_leads = Lead.objects.filter(
+            status='New', assigned_to=request.user
+        ).order_by('-created_at').values('id', 'name', 'created_at')[:5]
+
+    return JsonResponse({
+        'upcoming_count': upcoming.count(),
+        'upcoming': list(upcoming),
+        'new_leads_count': new_leads.count(),
+        'new_leads': list(new_leads),
+        'total_notifications': upcoming.count() + new_leads.count()
+    })
+
+
+@login_required
+def ajax_live_search(request):
+    query = request.GET.get('q', '').strip()
+    if not query:
+        return JsonResponse({'results': []})
+
+    if request.user.is_superuser:
+        leads = Lead.objects.filter(
+            name__icontains=query
+        ) | Lead.objects.filter(
+            email__icontains=query
+        ) | Lead.objects.filter(
+            phone__icontains=query
+        )
+    else:
+        leads = Lead.objects.filter(
+            assigned_to=request.user
+        ).filter(
+            name__icontains=query
+        )
+
+    results = []
+    for lead in leads[:8]:
+        results.append({
+            'id': lead.id,
+            'name': lead.name,
+            'email': lead.email,
+            'status': lead.status,
+            'type': 'lead'
+        })
+
+    customers = Customer.objects.filter(
+        name__icontains=query
+    )[:4] if request.user.is_superuser else []
+
+    for c in customers:
+        results.append({
+            'id': c.id,
+            'name': c.name,
+            'email': c.email,
+            'status': 'Customer',
+            'type': 'customer'
+        })
+
+    return JsonResponse({'results': results})

@@ -110,15 +110,5 @@
         </div>
     </div>
 </div>
-<script>
-document.querySelectorAll('input[type="text"], input[type="email"], textarea').forEach(el => {
-    el.addEventListener('input', function() {
-        let pos = this.selectionStart;
-        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
-        this.setSelectionRange(pos, pos);
-    });
-});
-</script>
-
 </body>
 </html>

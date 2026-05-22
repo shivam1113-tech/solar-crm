@@ -4,6 +4,8 @@
     <title>Projects - Solar CRM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
@@ -76,7 +78,7 @@
         <div class="panel">
             {% if projects %}
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table id="dataTable" class="table table-hover align-middle mb-0">
                     <thead class="table-light"><tr><th>#</th><th>Title</th><th>Customer</th><th>Status</th><th>Start</th><th>End</th><th>Actions</th></tr></thead>
                     <tbody>{% for p in projects %}
                     <tr>
@@ -98,14 +100,56 @@
     </div>
     <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
 </div>
+<!-- 1. jQuery FIRST -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+<!-- 2. Bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');document.getElementById('main').classList.toggle('expanded');}</script>
+
+<!-- 3. DataTables -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+<!-- 4. Custom scripts -->
+<script>
+function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+}
+</script>
 <script>
 document.querySelectorAll('input[type="text"], input[type="email"], textarea').forEach(el => {
     el.addEventListener('input', function() {
         let pos = this.selectionStart;
         this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
         this.setSelectionRange(pos, pos);
+    });
+});
+</script>
+
+<!-- 5. DataTable Init LAST -->
+<script>
+$(document).ready(function() {
+    $('#dataTable').DataTable({
+        dom: 'Bfrtip',
+        buttons: ['csv', 'excel', 'print'],
+        pageLength: 10,
+        language: {
+            search: "🔍 Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next →",
+                previous: "← Prev"
+            }
+        }
     });
 });
 </script>
