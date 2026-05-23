@@ -78,9 +78,14 @@ def dashboard(request):
 def leads(request):
     if request.user.is_superuser:
         leads = Lead.objects.all().order_by('-created_at')
+        employees = User.objects.filter(is_superuser=False, is_active=True)
     else:
         leads = Lead.objects.filter(assigned_to=request.user).order_by('-created_at')
-    return render(request, 'leads.html', {'leads': leads})
+        employees = []
+    return render(request, 'leads.html', {
+        'leads': leads,
+        'employees': employees
+    })
 
 
 @login_required
@@ -176,12 +181,14 @@ def convert_to_customer(request, id):
 
 @login_required
 def customers(request):
-    if not request.user.is_superuser:
-        messages.error(request, "Access denied")
-        return redirect('dashboard')
-    customers = Customer.objects.all().order_by('-created_at')
+    if request.user.is_superuser:
+        customers = Customer.objects.all().order_by('-created_at')
+    else:
+        # Employee sees only customers from their assigned leads
+        customers = Customer.objects.filter(
+            lead__assigned_to=request.user
+        ).order_by('-created_at')
     return render(request, 'customers.html', {'customers': customers})
-
 
 @login_required
 def add_customer(request):
@@ -228,11 +235,16 @@ def delete_customer(request, id):
 # ================= PROJECTS =================
 
 @login_required
+@login_required
 def projects(request):
-    if not request.user.is_superuser:
-        messages.error(request, "Access denied")
-        return redirect('dashboard')
-    projects = Project.objects.all().order_by('-created_at')
+    if request.user.is_superuser:
+        projects = Project.objects.all().order_by('-created_at')
+    else:
+        # Employee sees only projects of their assigned customers
+        my_customers = Customer.objects.filter(lead__assigned_to=request.user)
+        projects = Project.objects.filter(
+            customer__in=my_customers
+        ).order_by('-created_at')
     return render(request, 'projects.html', {'projects': projects})
 
 
@@ -288,10 +300,13 @@ def delete_project(request, id):
 
 @login_required
 def quotes(request):
-    if not request.user.is_superuser:
-        messages.error(request, "Access denied")
-        return redirect('dashboard')
-    quotes = Quote.objects.all().order_by('-created_at')
+    if request.user.is_superuser:
+        quotes = Quote.objects.all().order_by('-created_at')
+    else:
+        # Employee sees only quotes from their assigned leads (view only)
+        quotes = Quote.objects.filter(
+            lead__assigned_to=request.user
+        ).order_by('-created_at')
     return render(request, 'quotes.html', {'quotes': quotes})
 
 
@@ -426,6 +441,25 @@ def delete_task(request, id):
     messages.success(request, "Task deleted")
     return redirect('tasks')
 
+@login_required
+def edit_task(request, id):
+    task = get_object_or_404(Task, id=id)
+    leads = Lead.objects.all() if request.user.is_superuser else Lead.objects.filter(assigned_to=request.user)
+    if request.method == "POST":
+        task.title = request.POST.get('title')
+        task.description = request.POST.get('description')
+        task.lead = Lead.objects.filter(id=request.POST.get('lead')).first()
+        task.priority = request.POST.get('priority')
+        task.due_date = request.POST.get('due_date') or None
+        task.save()
+        messages.success(request, "Task updated successfully")
+        return redirect('tasks')
+    return render(request, 'task_form.html', {
+        'title': 'Edit Task',
+        'task': task,
+        'leads': leads
+    })
+
 
 # ================= FOLLOW UPS =================
 
@@ -472,6 +506,41 @@ def delete_followup(request, id):
     followup.delete()
     messages.success(request, "Follow up deleted")
     return redirect('followups')
+
+@login_required
+def toggle_followup(request, id):
+    followup = get_object_or_404(FollowUp, id=id)
+    followup.done = not followup.done
+    followup.save()
+    from django.http import JsonResponse
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.META.get('HTTP_X_CSRFTOKEN'):
+        return JsonResponse({'success': True, 'done': followup.done})
+    return redirect('followups')
+
+@login_required
+def edit_followup(request, id):
+    followup = get_object_or_404(FollowUp, id=id)
+    if not request.user.is_superuser and followup.lead.assigned_to != request.user:
+        messages.error(request, "Access denied")
+        return redirect('followups')
+    if request.user.is_superuser:
+        leads = Lead.objects.all()
+    else:
+        leads = Lead.objects.filter(assigned_to=request.user)
+    if request.method == "POST":
+        followup.title = request.POST.get('title')
+        followup.lead = get_object_or_404(Lead, id=request.POST.get('lead'))
+        followup.follow_up_date = request.POST.get('follow_up_date')
+        followup.follow_up_time = request.POST.get('follow_up_time') or None
+        followup.notes = request.POST.get('notes')
+        followup.save()
+        messages.success(request, "Follow up updated successfully")
+        return redirect('followups')
+    return render(request, 'followup_form.html', {
+        'title': 'Edit Follow Up',
+        'followup': followup,
+        'leads': leads
+    })
 
 
 # ================= IMPORT =================
@@ -813,3 +882,18 @@ def ajax_live_search(request):
         })
 
     return JsonResponse({'results': results})
+
+@login_required
+def view_customer(request, id):
+    customer = get_object_or_404(Customer, id=id)
+    return render(request, 'view_customer.html', {'customer': customer})
+
+@login_required
+def view_project(request, id):
+    project = get_object_or_404(Project, id=id)
+    return render(request, 'view_project.html', {'project': project})
+
+@login_required
+def view_quote(request, id):
+    quotes = get_object_or_404(Quote, id=id)
+    return render(request, 'view_quote.html', {'quote': Quote})

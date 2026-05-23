@@ -7,481 +7,232 @@
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
-
-        /* ===== SIDEBAR ===== */
-        .sidebar {
-            width: 245px;
-            height: 100vh;
-            position: fixed;
-            left: 0; top: 0;
-            background: linear-gradient(180deg, #071b36, #0b2547);
-            color: white;
-            padding: 22px 14px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            transition: width 0.3s ease;
-            z-index: 1000;
-        }
-
+        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease; z-index: 1000; }
         .sidebar.collapsed { width: 68px; }
         .sidebar.collapsed .menu-label { display: none; }
         .sidebar.collapsed .brand-text { display: none; }
         .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
-
-        .brand {
-            font-size: 22px; font-weight: 800;
-            margin-bottom: 28px;
-            display: flex; align-items: center; gap: 10px;
-            white-space: nowrap; overflow: hidden;
-        }
+        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; }
         .brand span { color: #f59e0b; }
-
-        .menu a {
-            display: flex; align-items: center; gap: 14px;
-            padding: 12px 14px; margin-bottom: 6px;
-            color: #dbeafe; text-decoration: none;
-            border-radius: 10px; font-size: 15px;
-            white-space: nowrap; overflow: hidden;
-            transition: all 0.2s;
-        }
+        .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
         .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
         .menu a.active, .menu a:hover { background: #2563eb; color: white; }
-
-        /* ===== MAIN ===== */
-        .main {
-            margin-left: 245px;
-            min-height: 100vh;
-            transition: margin-left 0.3s ease;
-        }
+        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
         .main.expanded { margin-left: 68px; }
-
-        /* ===== TOPBAR ===== */
-        .topbar {
-            height: 68px; background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 0 24px;
-            display: flex; align-items: center; justify-content: space-between;
-            position: sticky; top: 0; z-index: 999;
-        }
-        .hamburger {
-            cursor: pointer; font-size: 20px; color: #374151;
-            background: none; border: none;
-            padding: 6px 10px; border-radius: 8px;
-            transition: background 0.2s;
-        }
+        .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999; }
+        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; transition: background 0.2s; }
         .hamburger:hover { background: #f1f5f9; }
-        .search-box {
-            width: 300px; border: 1px solid #dbe3ef;
-            border-radius: 10px; padding: 9px 14px;
-            color: #64748b; font-size: 14px;
-        }
         .admin-box { display: flex; align-items: center; gap: 12px; }
-        .avatar {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: #2563eb;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: bold; font-size: 16px;
-        }
-
-        /* ===== CONTENT ===== */
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
         .content { padding: 20px 22px; }
-        .page-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 18px;
-        }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
         .page-header h2 { font-weight: 800; margin-bottom: 3px; font-size: 26px; }
-        .add-btn {
-            background: #2563eb; color: white;
-            border: none; padding: 10px 18px;
-            border-radius: 9px; text-decoration: none; font-size: 14px;
-        }
-
-        /* ===== STAT CARDS ===== */
-        .stat-card {
-            background: white; border: 1px solid #e5e7eb;
-            border-radius: 14px; padding: 16px 18px;
-            display: flex; align-items: center; gap: 14px;
-            height: 100px;
-        }
-        .icon-circle {
-            width: 50px; height: 50px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: white; flex-shrink: 0;
-        }
-        .blue{background:#2563eb;} .green{background:#22c55e;}
-        .orange{background:#f97316;} .purple{background:#7c3aed;}
-        .stat-card h3 { font-size: 22px; font-weight: 800; margin: 0; }
+        .stat-card { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; height: 100px; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .icon-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; flex-shrink: 0; }
+        .blue{background:#2563eb;} .green{background:#22c55e;} .orange{background:#f97316;} .purple{background:#7c3aed;}
+        .stat-card h3 { font-size: 22px; font-weight: 800; margin: 0; transition: all 0.3s; }
         .stat-card p { margin: 0; color: #64748b; font-size: 12px; }
         .growth { color: #16a34a; font-size: 11px; font-weight: 700; }
-
-        /* ===== PANELS ===== */
-        .panel {
-            background: white; border: 1px solid #e5e7eb;
-            border-radius: 14px; padding: 18px; margin-top: 16px;
-        }
+        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px; margin-top: 16px; }
         .panel h5 { font-weight: 800; margin-bottom: 14px; font-size: 15px; }
-
-        /* ===== PIE ===== */
-        .pie-wrap {
-            display: flex; align-items: center;
-            justify-content: flex-start; gap: 28px;
-            padding: 4px 0;
-        }
-        .pie-container {
-            width: 160px; height: 160px;
-            flex-shrink: 0; position: relative;
-        }
-        .legend-row {
-            display: flex; align-items: center; gap: 8px;
-            margin-bottom: 9px; font-size: 12px; color: #374151;
-        }
+        .pie-wrap { display: flex; align-items: center; justify-content: flex-start; gap: 28px; padding: 4px 0; }
+        .pie-container { width: 160px; height: 160px; flex-shrink: 0; position: relative; }
+        .legend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 12px; color: #374151; }
         .legend-row strong { font-size: 12px; color: #111827; margin-left: 4px; }
         .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-
-        /* ===== QUICK ACTIONS — compact grid ===== */
-        .quick-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 9px;
-        }
-        .quick-btn {
-            display: flex; align-items: center; gap: 7px;
-            padding: 9px 12px; border-radius: 9px;
-            font-size: 12px; font-weight: 600;
-            text-decoration: none; border: 1.5px solid transparent;
-            transition: opacity 0.2s;
-        }
+        .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+        .quick-btn { display: flex; align-items: center; gap: 7px; padding: 9px 12px; border-radius: 9px; font-size: 12px; font-weight: 600; text-decoration: none; border: 1.5px solid transparent; transition: opacity 0.2s; }
         .quick-btn:hover { opacity: 0.82; }
-        .qb-blue  { background: #2563eb; color: white; }
+        .qb-blue { background: #2563eb; color: white; }
         .qb-oblue { border-color: #2563eb; color: #2563eb; background: white; }
-        .qb-ogrn  { border-color: #22c55e; color: #15803d; background: white; }
-        .qb-dark  { border-color: #374151; color: #374151; background: white; }
-        .qb-ylw   { border-color: #f59e0b; color: #92400e; background: white; }
-        .qb-cyan  { border-color: #06b6d4; color: #0e7490; background: white; }
-
-        /* ===== LISTS ===== */
+        .qb-ogrn { border-color: #22c55e; color: #15803d; background: white; }
+        .qb-dark { border-color: #374151; color: #374151; background: white; }
+        .qb-ylw { border-color: #f59e0b; color: #92400e; background: white; }
+        .qb-cyan { border-color: #06b6d4; color: #0e7490; background: white; }
         .recent-list { list-style: none; padding: 0; margin: 0; }
-        .recent-list li {
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid #edf2f7; padding: 9px 0;
-        }
+        .recent-list li { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #edf2f7; padding: 9px 0; }
         .lead-left { display: flex; align-items: center; gap: 10px; }
-        .mini-avatar {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: #dbeafe; color: #1d4ed8;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 11px; flex-shrink: 0;
-        }
+        .mini-avatar { width: 32px; height: 32px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; }
         .badge-soft { padding: 3px 8px; border-radius: 6px; font-size: 11px; }
-        .badge-new      { background: #dbeafe; color: #1d4ed8; }
-        .badge-contacted{ background: #dcfce7; color: #15803d; }
-        .badge-qualified{ background: #ffedd5; color: #c2410c; }
+        .badge-new { background: #dbeafe; color: #1d4ed8; }
+        .badge-contacted { background: #dcfce7; color: #15803d; }
+        .badge-qualified { background: #ffedd5; color: #c2410c; }
         .badge-proposal { background: #ede9fe; color: #6d28d9; }
-        .badge-won      { background: #dcfce7; color: #15803d; }
-        .badge-lost     { background: #fee2e2; color: #b91c1c; }
-
-        .follow-item {
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid #edf2f7; padding: 9px 0;
-        }
-        .footer {
-            text-align: center; padding: 18px;
-            color: #64748b; border-top: 1px solid #e5e7eb;
-            background: white; margin-top: 20px; font-size: 13px;
-        }
+        .badge-won { background: #dcfce7; color: #15803d; }
+        .badge-lost { background: #fee2e2; color: #b91c1c; }
+        .follow-item { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #edf2f7; padding: 9px 0; }
+        .footer { text-align: center; padding: 18px; color: #64748b; border-top: 1px solid #e5e7eb; background: white; margin-top: 20px; font-size: 13px; }
         .no-data { color: #94a3b8; font-size: 13px; padding: 10px 0; }
+        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.5;transform:scale(1.3);} }
+        .notif-bell { position: relative; cursor: pointer; }
+        .notif-badge { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .notif-dropdown { position: absolute; top: 36px; right: -10px; width: 320px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); z-index: 9999; display: none; }
+        .notif-header { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 14px; }
+        .notif-item { padding: 10px 16px; border-bottom: 1px solid #f8fafc; font-size: 13px; }
+        .search-wrapper { position: relative; }
+        .search-box { width: 300px; border: 1px solid #dbe3ef; border-radius: 10px; padding: 9px 14px 9px 36px; color: #64748b; font-size: 14px; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .search-results { position: absolute; top: 44px; left: 0; width: 360px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); z-index: 9999; display: none; max-height: 300px; overflow-y: auto; }
+        .search-result-item { padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s; }
+        .search-result-item:hover { background: #f8fafc; }
+        .search-mini-avatar { width: 30px; height: 30px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+        .stat-updating { color: #2563eb !important; }
     </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
-    <div class="brand">
-        ☀️ <span class="brand-text"><span>SOLAR</span> CRM</span>
-    </div>
+    <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
     <div class="menu">
-        <a href="/dashboard/" class="active">
-            <i class="fa-solid fa-house"></i><span class="menu-label">Dashboard</span>
-        </a>
-        <a href="/leads/">
-            <i class="fa-solid fa-users"></i><span class="menu-label">Leads</span>
-        </a>
-        <a href="/tasks/">
-            <i class="fa-solid fa-list-check"></i><span class="menu-label">Tasks</span>
-        </a>
-        <a href="/followups/">
-            <i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span>
-        </a>
-        {% if request.user.is_superuser %}
-        <a href="/customers/">
-            <i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span>
-        </a>
-        <a href="/projects/">
-            <i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span>
-        </a>
-        <a href="/quotes/">
-            <i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span>
-        </a>
-        <a href="/invoices/">
-            <i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span>
-        </a>
-        <a href="/import/">
-            <i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span>
-        </a>
-        <a href="/employees/">
-            <i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span>
-        </a>
-        {% endif %}
-        <a href="/logout/">
-            <i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span>
-        </a>
+        <a href="/dashboard/" class="active"><i class="fa-solid fa-house"></i><span class="menu-label">Dashboard</span></a>
+        <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
+        <a href="/tasks/"><i class="fa-solid fa-list-check"></i><span class="menu-label">Tasks</span></a>
+        <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
+        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+<a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
+<a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
+{% if request.user.is_superuser %}
+<a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
+<a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
+<a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
+{% endif %}
+        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
     </div>
 </div>
 
-<!-- MAIN -->
 <div class="main" id="main">
-
-    <!-- Topbar -->
     <div class="topbar">
         <div class="d-flex align-items-center gap-3">
-            <button class="hamburger" onclick="toggleSidebar()">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <input class="search-box" placeholder="Search leads, customers, projects...">
+            <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input class="search-box" id="liveSearch" placeholder="Search leads, customers..." autocomplete="off">
+                <div class="search-results" id="searchResults"></div>
+            </div>
         </div>
-       <div class="admin-box" style="position:relative;">
-            <i class="fa-regular fa-bell fs-5 text-muted"></i>
-            <i class="fa-regular fa-envelope fs-5 text-muted"></i>
-
-            <!-- Clickable Profile -->
+        <div class="admin-box" style="position:relative;">
+            <div class="notif-bell" id="notifBell" onclick="toggleNotifications()">
+                <i class="fa-regular fa-bell fs-5 text-muted"></i>
+                <span class="notif-badge" id="notifCount" style="display:none;">0</span>
+                <div class="notif-dropdown" id="notifDropdown">
+                    <div class="notif-header"><i class="fa-solid fa-bell me-2"></i>Notifications</div>
+                    <div id="notifList"><div class="notif-item text-muted">Loading...</div></div>
+                </div>
+            </div>
             <div onclick="toggleProfile()" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
                 <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
                 <div>
                     <strong style="font-size:14px;">{{ request.user.username }}</strong><br>
-                    <small class="text-muted">
-                        {% if request.user.is_superuser %}Admin{% else %}Employee{% endif %}
-                    </small>
+                    <small class="text-muted">{% if request.user.is_superuser %}Admin{% else %}Employee{% endif %}</small>
                 </div>
                 <i class="fa-solid fa-chevron-down" style="font-size:11px;color:#94a3b8;"></i>
             </div>
-
-            <!-- Dropdown -->
-            <div id="profileDropdown" style="display:none;position:absolute;top:54px;right:0;
-                background:white;border:1px solid #e5e7eb;border-radius:14px;
-                box-shadow:0 8px 32px rgba(0,0,0,0.1);width:240px;z-index:9999;overflow:hidden;">
-
-                <!-- Header -->
+            <div id="profileDropdown" style="display:none;position:absolute;top:68px;right:24px;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.1);width:240px;z-index:9999;overflow:hidden;">
                 <div style="background:linear-gradient(135deg,#071b36,#0b2547);padding:16px 18px;">
                     <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:44px;height:44px;border-radius:50%;background:#2563eb;
-                            display:flex;align-items:center;justify-content:center;
-                            color:white;font-weight:800;font-size:18px;">
-                            {{ request.user.username|slice:":1"|upper }}
-                        </div>
+                        <div style="width:44px;height:44px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:18px;">{{ request.user.username|slice:":1"|upper }}</div>
                         <div>
                             <div style="color:white;font-weight:700;font-size:14px;">{{ request.user.username }}</div>
-                            <div style="color:#93c5fd;font-size:12px;">
-                                {% if request.user.is_superuser %}
-                                    🔑 Administrator
-                                {% else %}
-                                    👤 Employee
-                                {% endif %}
-                            </div>
+                            <div style="color:#93c5fd;font-size:12px;">{% if request.user.is_superuser %}🔑 Administrator{% else %}👤 Employee{% endif %}</div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Info -->
                 <div style="padding:12px 18px;border-bottom:1px solid #f1f5f9;">
-                   <div style="font-size:12px;color:#64748b;margin-bottom:4px;">
-    <i class="fa-solid fa-envelope" style="width:14px;"></i>
-    {{ request.user.email|default:"No email set" }}
-</div>
-{% if request.user.profile.phone %}
-<div style="font-size:12px;color:#64748b;margin-bottom:4px;">
-    <i class="fa-solid fa-phone" style="width:14px;"></i>
-    {{ request.user.profile.phone }}
-</div>
-{% endif %}
-{% if request.user.profile.address %}
-<div style="font-size:12px;color:#64748b;margin-bottom:4px;">
-    <i class="fa-solid fa-location-dot" style="width:14px;"></i>
-    {{ request.user.profile.address }}
-</div>
-{% endif %}
-<div style="font-size:12px;color:#64748b;margin-bottom:4px;">
-    <i class="fa-solid fa-calendar" style="width:14px;"></i>
-    Joined {{ request.user.date_joined|date:"d M Y" }}
-</div>
-<div style="font-size:12px;color:#64748b;">
-    <a href="/forgot-password/" style="color:#2563eb;text-decoration:none;">
-        <i class="fa-solid fa-key" style="width:14px;"></i>
-        Reset Password
-    </a>
-</div>
+                    <div style="font-size:12px;color:#64748b;margin-bottom:6px;"><i class="fa-solid fa-envelope" style="width:16px;"></i> {{ request.user.email|default:"No email set" }}</div>
+                    <div style="font-size:12px;color:#64748b;margin-bottom:6px;"><i class="fa-regular fa-calendar" style="width:16px;"></i> Joined {{ request.user.date_joined|date:"d M Y" }}</div>
+                    <div style="font-size:12px;"><a href="/forgot-password/" style="color:#2563eb;text-decoration:none;"><i class="fa-solid fa-key" style="width:16px;"></i> Reset Password</a></div>
                 </div>
-
-                <!-- Actions -->
                 <div style="padding:8px;">
                     {% if request.user.is_superuser %}
-                    <a href="/employees/" style="display:flex;align-items:center;gap:10px;
-                        padding:9px 12px;border-radius:8px;text-decoration:none;
-                        color:#374151;font-size:13px;transition:background 0.2s;"
-                        onmouseover="this.style.background='#f1f5f9'"
-                        onmouseout="this.style.background='transparent'">
-                        <i class="fa-solid fa-users" style="color:#2563eb;width:16px;"></i>
-                        Manage Employees
-                    </a>
-                    <a href="/admin/" style="display:flex;align-items:center;gap:10px;
-                        padding:9px 12px;border-radius:8px;text-decoration:none;
-                        color:#374151;font-size:13px;transition:background 0.2s;"
-                        onmouseover="this.style.background='#f1f5f9'"
-                        onmouseout="this.style.background='transparent'">
-                        <i class="fa-solid fa-gear" style="color:#7c3aed;width:16px;"></i>
-                        Django Admin
-                    </a>
+                    <a href="/employees/" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;text-decoration:none;color:#374151;font-size:13px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'"><i class="fa-solid fa-users" style="color:#2563eb;width:16px;"></i> Manage Employees</a>
+                    <a href="/admin/" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;text-decoration:none;color:#374151;font-size:13px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'"><i class="fa-solid fa-gear" style="color:#7c3aed;width:16px;"></i> Django Admin</a>
                     {% else %}
-                    <div style="padding:9px 12px;font-size:13px;color:#64748b;">
-                        <i class="fa-solid fa-shield-halved" style="color:#22c55e;width:16px;"></i>
-                        Limited Access Account
-                    </div>
+                    <div style="padding:9px 12px;font-size:13px;color:#64748b;"><i class="fa-solid fa-shield-halved" style="color:#22c55e;width:16px;"></i> Limited Access Account</div>
                     {% endif %}
-
-                    <a href="/logout/" style="display:flex;align-items:center;gap:10px;
-                        padding:9px 12px;border-radius:8px;text-decoration:none;
-                        color:#ef4444;font-size:13px;transition:background 0.2s;"
-                        onmouseover="this.style.background='#fee2e2'"
-                        onmouseout="this.style.background='transparent'">
-                        <i class="fa-solid fa-right-from-bracket" style="width:16px;"></i>
-                        Logout
-                    </a>
+                    <a href="/logout/" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;text-decoration:none;color:#ef4444;font-size:13px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'"><i class="fa-solid fa-right-from-bracket" style="width:16px;"></i> Logout</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Content -->
     <div class="content">
-
         <div class="page-header">
             <div>
                 <h2>Dashboard</h2>
-                <p class="text-muted mb-0" style="font-size:13px;">Welcome back, {{ request.user.username }}!</p>
+                <p class="text-muted mb-0" style="font-size:13px;"><span class="live-dot"></span> Live · Welcome back, {{ request.user.username }}!</p>
             </div>
-
         </div>
 
-        <!-- Stat Cards -->
         <div class="row g-3">
             <div class="col-md-3">
                 <div class="stat-card">
                     <div class="icon-circle blue"><i class="fa-solid fa-users"></i></div>
-                    <div>
-                        <p>Total Leads</p>
-                        <h3>{{ total_leads }}</h3>
-                        <span class="growth">↑ All time</span>
-                    </div>
+                    <div><p>Total Leads</p><h3 id="stat-total">{{ total_leads }}</h3><span class="growth">↑ All time</span></div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <div class="icon-circle green"><i class="fa-regular fa-user"></i></div>
-                    <div>
-                        <p>New Leads</p>
-                        <h3>{{ leads_new }}</h3>
-                        <span class="growth">↑ Pending</span>
-                    </div>
+                    <div><p>New Leads</p><h3 id="stat-new">{{ leads_new }}</h3><span class="growth">↑ Pending</span></div>
                 </div>
             </div>
+            {% if request.user.is_superuser %}
             <div class="col-md-3">
                 <div class="stat-card">
                     <div class="icon-circle orange"><i class="fa-solid fa-handshake"></i></div>
-                    <div>
-                        <p>Total Deals</p>
-                        <h3>{{ total_deals }}</h3>
-                        <span class="growth">↑ Accepted quotes</span>
-                    </div>
+                    <div><p>Total Deals</p><h3 id="stat-deals">{{ total_deals }}</h3><span class="growth">↑ Accepted quotes</span></div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
                     <div class="icon-circle purple"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-                    <div>
-                        <p>Revenue</p>
-                        <h3>₹{{ total_revenue|floatformat:0 }}</h3>
-                        <span class="growth">↑ Paid invoices</span>
-                    </div>
+                    <div><p>Revenue</p><h3 id="stat-revenue">₹{{ total_revenue|floatformat:0 }}</h3><span class="growth">↑ Paid invoices</span></div>
                 </div>
             </div>
+            {% endif %}
         </div>
 
-        <!-- Pie + Quick Actions -->
         <div class="row g-3">
             <div class="col-md-7">
                 <div class="panel">
                     <h5>Leads Overview</h5>
                     {% if total_leads > 0 %}
                     <div class="pie-wrap">
-                        <div class="pie-container">
-                            <canvas id="leadsPie"></canvas>
-                        </div>
+                        <div class="pie-container"><canvas id="leadsPie"></canvas></div>
                         <div>
-                            <div class="legend-row">
-                                <span class="dot" style="background:#2563eb;"></span>
-                                New <strong>{{ leads_new }}</strong>
-                            </div>
-                            <div class="legend-row">
-                                <span class="dot" style="background:#22c55e;"></span>
-                                Contacted <strong>{{ leads_contacted }}</strong>
-                            </div>
-                            <div class="legend-row">
-                                <span class="dot" style="background:#f97316;"></span>
-                                Qualified <strong>{{ leads_qualified }}</strong>
-                            </div>
-                            <div class="legend-row">
-                                <span class="dot" style="background:#7c3aed;"></span>
-                                Proposal <strong>{{ leads_proposal }}</strong>
-                            </div>
-                            <div class="legend-row">
-                                <span class="dot" style="background:#ef4444;"></span>
-                                Won <strong>{{ leads_won|default:0 }}</strong>
-                            </div>
+                            <div class="legend-row"><span class="dot" style="background:#2563eb;"></span>New <strong id="leg-new">{{ leads_new }}</strong></div>
+                            <div class="legend-row"><span class="dot" style="background:#22c55e;"></span>Contacted <strong id="leg-contacted">{{ leads_contacted }}</strong></div>
+                            <div class="legend-row"><span class="dot" style="background:#f97316;"></span>Qualified <strong id="leg-qualified">{{ leads_qualified }}</strong></div>
+                            <div class="legend-row"><span class="dot" style="background:#7c3aed;"></span>Proposal <strong id="leg-proposal">{{ leads_proposal }}</strong></div>
+                            <div class="legend-row"><span class="dot" style="background:#ef4444;"></span>Won <strong>{{ leads_won|default:0 }}</strong></div>
                         </div>
                     </div>
                     {% else %}
-                    <p class="no-data text-center mt-3">No leads yet. <a href="/add-lead/">Add your first lead →</a></p>
+                    <p class="no-data text-center mt-3">No leads yet.{% if request.user.is_superuser %} <a href="/add-lead/">Add your first lead →</a>{% endif %}</p>
                     {% endif %}
                 </div>
             </div>
-
             <div class="col-md-5">
                 <div class="panel">
                     <h5>Quick Actions</h5>
                     <div class="quick-grid">
-                        <a href="/add-lead/" class="quick-btn qb-blue">
-                            <i class="fa-solid fa-plus"></i> Add Lead
-                        </a>
-                        <a href="/leads/" class="quick-btn qb-oblue">
-                            <i class="fa-solid fa-users"></i> View Leads
-                        </a>
-                        <a href="/import/" class="quick-btn qb-ogrn">
-                            <i class="fa-solid fa-upload"></i> Import Leads
-                        </a>
-                        <a href="/customers/add/" class="quick-btn qb-dark">
-                            <i class="fa-solid fa-user-group"></i> Add Customer
-                        </a>
-                        <a href="/quotes/add/" class="quick-btn qb-ylw">
-                            <i class="fa-solid fa-file-invoice"></i> New Quote
-                        </a>
-                        <a href="/followups/add/" class="quick-btn qb-cyan">
-                            <i class="fa-solid fa-phone"></i> Add Follow Up
-                        </a>
+                        {% if request.user.is_superuser %}
+                        <a href="/add-lead/" class="quick-btn qb-blue"><i class="fa-solid fa-plus"></i> Add Lead</a>
+                        {% endif %}
+                        <a href="/leads/" class="quick-btn qb-oblue"><i class="fa-solid fa-users"></i> View Leads</a>
+                        {% if request.user.is_superuser %}
+                        <a href="/import/" class="quick-btn qb-ogrn"><i class="fa-solid fa-upload"></i> Import Leads</a>
+                        <a href="/customers/add/" class="quick-btn qb-dark"><i class="fa-solid fa-user-group"></i> Add Customer</a>
+                        <a href="/quotes/add/" class="quick-btn qb-ylw"><i class="fa-solid fa-file-invoice"></i> New Quote</a>
+                        <a href="/followups/add/" class="quick-btn qb-cyan"><i class="fa-solid fa-phone"></i> Add Follow Up</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Recent Leads + Follow Ups -->
         <div class="row g-3">
             <div class="col-md-6">
                 <div class="panel">
@@ -489,25 +240,21 @@
                         <h5 class="mb-0">Recent Leads</h5>
                         <a href="/leads/" style="font-size:13px;">View All</a>
                     </div>
-                    <ul class="recent-list">
+                    <ul class="recent-list" id="recentLeadsList">
                         {% for lead in recent_leads %}
                         <li>
                             <div class="lead-left">
                                 <div class="mini-avatar">{{ lead.name|slice:":2"|upper }}</div>
-                                <div>
-                                    <strong style="font-size:13px;">{{ lead.name }}</strong><br>
-                                    <small class="text-muted">{{ lead.email }}</small>
-                                </div>
+                                <div><strong style="font-size:13px;">{{ lead.name }}</strong><br><small class="text-muted">{{ lead.email }}</small></div>
                             </div>
                             <span class="badge-soft badge-{{ lead.status|lower }}">{{ lead.status }}</span>
                         </li>
                         {% empty %}
-                        <li><p class="no-data mb-0">No leads yet. <a href="/add-lead/">Add one →</a></p></li>
+                        <li><p class="no-data mb-0">No leads yet.{% if request.user.is_superuser %} <a href="/add-lead/">Add one →</a>{% endif %}</p></li>
                         {% endfor %}
                     </ul>
                 </div>
             </div>
-
             <div class="col-md-6">
                 <div class="panel">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -516,81 +263,123 @@
                     </div>
                     {% for f in upcoming_followups %}
                     <div class="follow-item">
-                        <div>
-                            <strong style="font-size:13px;">{{ f.title }}</strong><br>
-                            <small class="text-muted">{{ f.lead.name }} — {{ f.follow_up_date }}</small>
-                        </div>
+                        <div><strong style="font-size:13px;">{{ f.title }}</strong><br><small class="text-muted">{{ f.lead.name }} — {{ f.follow_up_date }}</small></div>
                         <span class="text-muted" style="font-size:12px;">{{ f.follow_up_time|default:"—" }}</span>
                     </div>
                     {% empty %}
-                    <p class="no-data">No upcoming follow ups. <a href="/followups/add/">Add one →</a></p>
+                    <p class="no-data">No upcoming follow ups.{% if request.user.is_superuser %} <a href="/followups/add/">Add one →</a>{% endif %}</p>
                     {% endfor %}
                 </div>
             </div>
         </div>
-
-    </div><!-- /content -->
+    </div>
 
     <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
+</div>
 
-</div><!-- /main -->
-
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Sidebar toggle
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const main = document.getElementById('main');
-        sidebar.classList.toggle('collapsed');
-        main.classList.toggle('expanded');
-    }
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+}
+const leadsNew = Number("{{ leads_new|default:0 }}");
+const leadsContacted = Number("{{ leads_contacted|default:0 }}");
+const leadsQualified = Number("{{ leads_qualified|default:0 }}");
+const leadsProposal = Number("{{ leads_proposal|default:0 }}");
 
-    // Pie chart
-    const ctx = document.getElementById('leadsPie');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['New', 'Contacted', 'Qualified', 'Proposal', 'Won'],
-                datasets: [{
-                    data: [{{ leads_new }}, {{ leads_contacted }}, {{ leads_qualified }}, {{ leads_proposal }}, 0],
-                    backgroundColor: ['#2563eb', '#22c55e', '#f97316', '#7c3aed', '#ef4444'],
-                    borderWidth: 3,
-                    borderColor: '#ffffff',
-                    hoverOffset: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                cutout: '62%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(c) {
-                                return ' ' + c.label + ': ' + c.parsed;
-                            }
-                        }
+let pieChart;
+const ctx = document.getElementById('leadsPie');
+
+if (ctx) {
+    pieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['New', 'Contacted', 'Qualified', 'Proposal', 'Won'],
+            datasets: [{
+                data: [
+                    leadsNew,
+                    leadsContacted,
+                    leadsQualified,
+                    leadsProposal,
+                    0
+                ],
+                backgroundColor: [
+                    '#2563eb',
+                    '#22c55e',
+                    '#f97316',
+                    '#7c3aed',
+                    '#ef4444'
+                ],
+                borderWidth: 3,
+                borderColor: '#ffffff',
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '62%',
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: c => ' ' + c.label + ': ' + c.parsed
                     }
                 }
             }
-        });
-    }
-</script>
-<script>
-    // Profile dropdown
-    function toggleProfile() {
-        const d = document.getElementById('profileDropdown');
-        d.style.display = d.style.display === 'none' ? 'block' : 'none';
-    }
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        const dropdown = document.getElementById('profileDropdown');
-        if (!e.target.closest('.admin-box')) {
-            dropdown.style.display = 'none';
         }
     });
+}
+      
+function refreshStats() {
+    fetch('/ajax/dashboard-stats/').then(r => r.json()).then(data => {
+        function animateNum(el, newVal) { if (!el) return; el.classList.add('stat-updating'); el.textContent = newVal; setTimeout(() => el.classList.remove('stat-updating'), 500); }
+        animateNum(document.getElementById('stat-total'), data.total_leads);
+        animateNum(document.getElementById('stat-new'), data.new_leads);
+        animateNum(document.getElementById('stat-deals'), data.total_deals);~
+        animateNum(document.getElementById('stat-revenue'), '₹' + Math.round(data.total_revenue));
+        const legNew = document.getElementById('leg-new'); const legContacted = document.getElementById('leg-contacted'); const legQualified = document.getElementById('leg-qualified'); const legProposal = document.getElementById('leg-proposal');
+        if (legNew) legNew.textContent = data.new_leads; if (legContacted) legContacted.textContent = data.contacted; if (legQualified) legQualified.textContent = data.qualified; if (legProposal) legProposal.textContent = data.proposal;
+        if (pieChart) { pieChart.data.datasets[0].data = [data.new_leads, data.contacted, data.qualified, data.proposal, 0]; pieChart.update('none'); }
+    }).catch(err => console.log('Stats refresh error:', err));
+}
+setInterval(refreshStats, 30000);
+function loadNotifications() {
+    fetch('/ajax/notifications/').then(r => r.json()).then(data => {
+        const badge = document.getElementById('notifCount'); const list = document.getElementById('notifList');
+        if (data.total_notifications > 0) { badge.style.display = 'flex'; badge.textContent = data.total_notifications > 9 ? '9+' : data.total_notifications; } else { badge.style.display = 'none'; }
+        let html = '';
+        data.upcoming.forEach(f => { html += `<div class="notif-item"><i class="fa-solid fa-phone text-primary me-2"></i><strong>${f.title}</strong> - ${f.lead__name}<small class="d-block text-muted">${f.follow_up_time || 'Today'}</small></div>`; });
+        data.new_leads.forEach(l => { html += `<div class="notif-item"><i class="fa-solid fa-user-plus text-success me-2"></i>New lead: <strong>${l.name}</strong></div>`; });
+        list.innerHTML = html || '<div class="notif-item text-muted">No notifications</div>';
+    });
+}
+function toggleNotifications() { const d = document.getElementById('notifDropdown'); d.style.display = d.style.display === 'none' ? 'block' : 'none'; }
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#notifBell')) document.getElementById('notifDropdown').style.display = 'none';
+    if (!e.target.closest('.search-wrapper')) document.getElementById('searchResults').style.display = 'none';
+    if (!e.target.closest('.admin-box')) document.getElementById('profileDropdown').style.display = 'none';
+});
+loadNotifications();
+setInterval(loadNotifications, 30000);
+let searchTimeout;
+document.getElementById('liveSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout); const q = this.value.trim(); const results = document.getElementById('searchResults');
+    if (q.length < 2) { results.style.display = 'none'; return; }
+    searchTimeout = setTimeout(() => {
+        fetch(`/ajax/search/?q=${encodeURIComponent(q)}`).then(r => r.json()).then(data => {
+            if (data.results.length === 0) { results.innerHTML = '<div style="padding:12px 16px;color:#94a3b8;font-size:13px;">No results found</div>'; }
+            else { results.innerHTML = data.results.map(r => `<div class="search-result-item" onclick="window.location='/${r.type === 'lead' ? 'lead' : 'customers'}/${r.id}/'"><div class="search-mini-avatar">${r.name.substring(0,2).toUpperCase()}</div><div><strong style="font-size:13px;">${r.name}</strong><br><small style="color:#64748b;">${r.email} · ${r.status}</small></div></div>`).join(''); }
+            results.style.display = 'block';
+        });
+    }, 300);
+});
+function toggleProfile() { const d = document.getElementById('profileDropdown'); if (d) d.style.display = d.style.display === 'none' ? 'block' : 'none'; }
 </script>
 </body>
 </html>

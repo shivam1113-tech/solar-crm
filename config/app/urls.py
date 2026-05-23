@@ -27,18 +27,21 @@ urlpatterns = [
     path('customers/add/', views.add_customer, name='add_customer'),
     path('customers/<int:id>/edit/', views.edit_customer, name='edit_customer'),
     path('customers/<int:id>/delete/', views.delete_customer, name='delete_customer'),
+    path('customers/<int:id>/view/', views.view_customer, name='view_customer'),
 
     # 🏗️ Projects
     path('projects/', views.projects, name='projects'),
     path('projects/add/', views.add_project, name='add_project'),
     path('projects/<int:id>/edit/', views.edit_project, name='edit_project'),
     path('projects/<int:id>/delete/', views.delete_project, name='delete_project'),
+    path('projects/<int:id>/view/', views.view_project, name='view_project'),
 
     # 📄 Quotes
     path('quotes/', views.quotes, name='quotes'),
     path('quotes/add/', views.add_quote, name='add_quote'),
     path('quotes/<int:id>/edit/', views.edit_quote, name='edit_quote'),
     path('quotes/<int:id>/delete/', views.delete_quote, name='delete_quote'),
+    path('quotes/<int:id>/view/', views.view_quote, name='view_quote'),
 
     # 🧾 Invoices
     path('invoices/', views.invoices, name='invoices'),
@@ -50,11 +53,14 @@ urlpatterns = [
     path('tasks/add/', views.add_task, name='add_task'),
     path('tasks/<int:id>/toggle/', views.toggle_task, name='toggle_task'),
     path('tasks/<int:id>/delete/', views.delete_task, name='delete_task'),
+    path('tasks/<int:id>/edit/', views.edit_task, name='edit_task'),
 
     # 📞 Follow Ups
     path('followups/', views.followups, name='followups'),
     path('followups/add/', views.add_followup, name='add_followup'),
     path('followups/<int:id>/delete/', views.delete_followup, name='delete_followup'),
+    path('followups/<int:id>/toggle/', views.toggle_followup, name='toggle_followup'),
+    path('followups/<int:id>/edit/', views.edit_followup, name='edit_followup'),
 
     # 👥 Employees
 path('employees/', views.employees, name='employees'),

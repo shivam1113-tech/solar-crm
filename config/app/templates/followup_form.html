@@ -44,14 +44,14 @@
         <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
         <a href="/tasks/"><i class="fa-solid fa-list-check"></i><span class="menu-label">Tasks</span></a>
         <a href="/followups/" class="active"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
-        {% if request.user.is_superuser %}
         <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
-        <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
-        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
-        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
-        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
-        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
-        {% endif %}
+<a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
+<a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
+{% if request.user.is_superuser %}
+<a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
+<a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
+<a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
+{% endif %}
         <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
     </div>
 </div>
@@ -72,11 +72,11 @@
         <div class="panel" style="max-width:700px;">
             <form method="POST">{% csrf_token %}
                 <div class="row g-3">
-                    <div class="col-12"><label>Title</label><input type="text" name="title" class="form-control" placeholder="e.g. Follow up call with Ramesh" required></div>
-                    <div class="col-md-6"><label>Lead</label><select name="lead" class="form-select" required><option value="">-- Select Lead --</option>{% for l in leads %}<option value="{{ l.id }}">{{ l.name }} ({{ l.status }})</option>{% endfor %}</select></div>
-                    <div class="col-md-6"><label>Follow Up Date</label><input type="date" name="follow_up_date" class="form-control" required></div>
-                    <div class="col-md-6"><label>Time <small class="text-muted fw-normal">(optional)</small></label><input type="time" name="follow_up_time" class="form-control"></div>
-                    <div class="col-12"><label>Notes <small class="text-muted fw-normal">(optional)</small></label><textarea name="notes" class="form-control" rows="3" placeholder="Any details about this follow up..."></textarea></div>
+                    <div class="col-12"><label>Title</label><input type="text" name="title" class="form-control" placeholder="e.g. Follow up call with Ramesh" value="{{ followup.title|default:'' }}" required></div>
+                    <div class="col-md-6"><label>Lead</label><select name="lead" class="form-select" required><option value="">-- Select Lead --</option>{% for l in leads %}<option value="{{ l.id }}" {% if followup.lead_id == l.id %}selected{% endif %}>{{ l.name }} ({{ l.status }})</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label>Follow Up Date</label><input type="date" name="follow_up_date" class="form-control" value="{{ followup.follow_up_date|default:'' }}" required></div>
+                    <div class="col-md-6"><label>Time <small class="text-muted fw-normal">(optional)</small></label></div>
+                    <div class="col-12"><label>Notes <small class="text-muted fw-normal">(optional)</small></label><textarea name="notes" class="form-control" rows="3" placeholder="Any details about this follow up...">{{ followup.notes|default:'' }}</textarea></div>
                     <div class="col-12 d-flex gap-3 mt-2"><button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> Save Follow Up</button><a href="/followups/" class="btn-cancel">Cancel</a></div>
                 </div>
             </form>
