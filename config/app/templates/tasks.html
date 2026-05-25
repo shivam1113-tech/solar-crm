@@ -83,6 +83,8 @@
                             {% if request.user.is_superuser %}
                             <a href="/tasks/{{ t.id }}/delete/" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')">Delete</a>
                             {% endif %}
+                            <a href="/tasks/{{ t.id }}/view/" class="btn btn-sm btn-outline-primary">View</a>
+
                         </td>
                     </tr>{% endfor %}</tbody>
                 </table>

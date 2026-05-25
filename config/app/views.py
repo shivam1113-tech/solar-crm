@@ -82,10 +82,7 @@ def leads(request):
     else:
         leads = Lead.objects.filter(assigned_to=request.user).order_by('-created_at')
         employees = []
-    return render(request, 'leads.html', {
-        'leads': leads,
-        'employees': employees
-    })
+    return render(request, 'leads.html', {'leads': leads, 'employees': employees})
 
 
 @login_required
@@ -113,10 +110,7 @@ def add_lead(request):
         )
         messages.success(request, "Lead added successfully")
         return redirect('leads')
-    return render(request, 'lead_form.html', {
-        'title': 'Add Lead',
-        'employees': employees
-    })
+    return render(request, 'lead_form.html', {'title': 'Add Lead', 'employees': employees})
 
 
 @login_required
@@ -138,11 +132,7 @@ def edit_lead(request, id):
         lead.save()
         messages.success(request, "Lead updated successfully")
         return redirect('view_lead', id=id)
-    return render(request, 'lead_form.html', {
-        'lead': lead,
-        'title': 'Edit Lead',
-        'employees': employees
-    })
+    return render(request, 'lead_form.html', {'lead': lead, 'title': 'Edit Lead', 'employees': employees})
 
 
 @login_required
@@ -165,12 +155,7 @@ def convert_to_customer(request, id):
     if Customer.objects.filter(email=lead.email).exists():
         messages.warning(request, f"{lead.name} is already a customer!")
         return redirect('view_lead', id=id)
-    Customer.objects.create(
-        lead=lead,
-        name=lead.name,
-        email=lead.email,
-        phone=lead.phone,
-    )
+    Customer.objects.create(lead=lead, name=lead.name, email=lead.email, phone=lead.phone)
     lead.status = "Won"
     lead.save()
     messages.success(request, f"{lead.name} converted to customer!")
@@ -184,11 +169,15 @@ def customers(request):
     if request.user.is_superuser:
         customers = Customer.objects.all().order_by('-created_at')
     else:
-        # Employee sees only customers from their assigned leads
-        customers = Customer.objects.filter(
-            lead__assigned_to=request.user
-        ).order_by('-created_at')
+        customers = Customer.objects.filter(lead__assigned_to=request.user).order_by('-created_at')
     return render(request, 'customers.html', {'customers': customers})
+
+
+@login_required
+def view_customer(request, id):
+    customer = get_object_or_404(Customer, id=id)
+    return render(request, 'view_customer.html', {'customer': customer})
+
 
 @login_required
 def add_customer(request):
@@ -235,17 +224,19 @@ def delete_customer(request, id):
 # ================= PROJECTS =================
 
 @login_required
-@login_required
 def projects(request):
     if request.user.is_superuser:
         projects = Project.objects.all().order_by('-created_at')
     else:
-        # Employee sees only projects of their assigned customers
         my_customers = Customer.objects.filter(lead__assigned_to=request.user)
-        projects = Project.objects.filter(
-            customer__in=my_customers
-        ).order_by('-created_at')
+        projects = Project.objects.filter(customer__in=my_customers).order_by('-created_at')
     return render(request, 'projects.html', {'projects': projects})
+
+
+@login_required
+def view_project(request, id):
+    project = get_object_or_404(Project, id=id)
+    return render(request, 'view_project.html', {'project': project})
 
 
 @login_required
@@ -303,11 +294,15 @@ def quotes(request):
     if request.user.is_superuser:
         quotes = Quote.objects.all().order_by('-created_at')
     else:
-        # Employee sees only quotes from their assigned leads (view only)
-        quotes = Quote.objects.filter(
-            lead__assigned_to=request.user
-        ).order_by('-created_at')
+        quotes = Quote.objects.filter(lead__assigned_to=request.user).order_by('-created_at')
     return render(request, 'quotes.html', {'quotes': quotes})
+
+
+@login_required
+def view_quote(request, id):
+    # FIXED: was using wrong variable name
+    quote = get_object_or_404(Quote, id=id)
+    return render(request, 'view_quote.html', {'quote': quote})
 
 
 @login_required
@@ -366,6 +361,14 @@ def invoices(request):
 
 
 @login_required
+def view_invoice(request, id):
+    if not request.user.is_superuser:
+        return redirect('dashboard')
+    invoice = get_object_or_404(Invoice, id=id)
+    return render(request, 'view_invoice.html', {'invoice': invoice})
+
+
+@login_required
 def add_invoice(request):
     if not request.user.is_superuser:
         return redirect('dashboard')
@@ -401,6 +404,15 @@ def tasks(request):
     else:
         tasks = Task.objects.filter(assigned_to=request.user).order_by('-created_at')
     return render(request, 'tasks.html', {'tasks': tasks})
+
+
+@login_required
+def view_task(request, id):
+    task = get_object_or_404(Task, id=id)
+    if not request.user.is_superuser and task.assigned_to != request.user:
+        messages.error(request, "Access denied")
+        return redirect('tasks')
+    return render(request, 'view_task.html', {'task': task})
 
 
 @login_required
@@ -441,6 +453,7 @@ def delete_task(request, id):
     messages.success(request, "Task deleted")
     return redirect('tasks')
 
+
 @login_required
 def edit_task(request, id):
     task = get_object_or_404(Task, id=id)
@@ -454,11 +467,7 @@ def edit_task(request, id):
         task.save()
         messages.success(request, "Task updated successfully")
         return redirect('tasks')
-    return render(request, 'task_form.html', {
-        'title': 'Edit Task',
-        'task': task,
-        'leads': leads
-    })
+    return render(request, 'task_form.html', {'title': 'Edit Task', 'task': task, 'leads': leads})
 
 
 # ================= FOLLOW UPS =================
@@ -468,10 +477,17 @@ def followups(request):
     if request.user.is_superuser:
         followups = FollowUp.objects.all().order_by('follow_up_date', 'follow_up_time')
     else:
-        followups = FollowUp.objects.filter(
-            lead__assigned_to=request.user
-        ).order_by('follow_up_date', 'follow_up_time')
+        followups = FollowUp.objects.filter(lead__assigned_to=request.user).order_by('follow_up_date', 'follow_up_time')
     return render(request, 'followups.html', {'followups': followups})
+
+
+@login_required
+def view_followup(request, id):
+    followup = get_object_or_404(FollowUp, id=id)
+    if not request.user.is_superuser and followup.lead.assigned_to != request.user:
+        messages.error(request, "Access denied")
+        return redirect('followups')
+    return render(request, 'view_followup.html', {'followup': followup})
 
 
 @login_required
@@ -491,10 +507,7 @@ def add_followup(request):
         )
         messages.success(request, "Follow up added successfully")
         return redirect('followups')
-    return render(request, 'followup_form.html', {
-        'title': 'Add Follow Up',
-        'leads': leads
-    })
+    return render(request, 'followup_form.html', {'title': 'Add Follow Up', 'leads': leads})
 
 
 @login_required
@@ -507,6 +520,7 @@ def delete_followup(request, id):
     messages.success(request, "Follow up deleted")
     return redirect('followups')
 
+
 @login_required
 def toggle_followup(request, id):
     followup = get_object_or_404(FollowUp, id=id)
@@ -517,16 +531,14 @@ def toggle_followup(request, id):
         return JsonResponse({'success': True, 'done': followup.done})
     return redirect('followups')
 
+
 @login_required
 def edit_followup(request, id):
     followup = get_object_or_404(FollowUp, id=id)
     if not request.user.is_superuser and followup.lead.assigned_to != request.user:
         messages.error(request, "Access denied")
         return redirect('followups')
-    if request.user.is_superuser:
-        leads = Lead.objects.all()
-    else:
-        leads = Lead.objects.filter(assigned_to=request.user)
+    leads = Lead.objects.all() if request.user.is_superuser else Lead.objects.filter(assigned_to=request.user)
     if request.method == "POST":
         followup.title = request.POST.get('title')
         followup.lead = get_object_or_404(Lead, id=request.POST.get('lead'))
@@ -536,11 +548,7 @@ def edit_followup(request, id):
         followup.save()
         messages.success(request, "Follow up updated successfully")
         return redirect('followups')
-    return render(request, 'followup_form.html', {
-        'title': 'Edit Follow Up',
-        'followup': followup,
-        'leads': leads
-    })
+    return render(request, 'followup_form.html', {'title': 'Edit Follow Up', 'followup': followup, 'leads': leads})
 
 
 # ================= IMPORT =================
@@ -564,12 +572,9 @@ def import_data(request):
                 for row in reader:
                     row = {k.strip().lower(): v.strip() for k, v in row.items()}
                     Lead.objects.create(
-                        name=row.get('name', ''),
-                        email=row.get('email', ''),
-                        phone=row.get('phone', ''),
-                        description=row.get('description', ''),
-                        status=row.get('status', 'New'),
-                        budget=row.get('budget', 0) or 0,
+                        name=row.get('name', ''), email=row.get('email', ''),
+                        phone=row.get('phone', ''), description=row.get('description', ''),
+                        status=row.get('status', 'New'), budget=row.get('budget', 0) or 0,
                     )
                     count += 1
             elif filename.endswith('.xlsx') or filename.endswith('.xls'):
@@ -580,12 +585,9 @@ def import_data(request):
                 for row in ws.iter_rows(min_row=2, values_only=True):
                     data = dict(zip(headers, row))
                     Lead.objects.create(
-                        name=str(data.get('name') or ''),
-                        email=str(data.get('email') or ''),
-                        phone=str(data.get('phone') or ''),
-                        description=str(data.get('description') or ''),
-                        status=str(data.get('status') or 'New'),
-                        budget=data.get('budget') or 0,
+                        name=str(data.get('name') or ''), email=str(data.get('email') or ''),
+                        phone=str(data.get('phone') or ''), description=str(data.get('description') or ''),
+                        status=str(data.get('status') or 'New'), budget=data.get('budget') or 0,
                     )
                     count += 1
             else:
@@ -620,13 +622,7 @@ def add_employee(request):
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists")
             return render(request, 'add_employee.html', {'error': 'Username already exists'})
-        User.objects.create_user(
-            username=username,
-            email=email,
-            password=password,
-            is_staff=False,
-            is_superuser=False,
-        )
+        User.objects.create_user(username=username, email=email, password=password, is_staff=False, is_superuser=False)
         messages.success(request, f"Employee '{username}' created successfully!")
         return redirect('employees')
     return render(request, 'add_employee.html')
@@ -642,7 +638,6 @@ def delete_employee(request, id):
     return redirect('employees')
 
 
-
 # ================= FORGOT PASSWORD =================
 
 def forgot_password(request):
@@ -652,39 +647,32 @@ def forgot_password(request):
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             return render(request, 'forgot.html', {'message': 'No account found with this email'})
-
         otp = str(random.randint(100000, 999999))
         request.session['reset_otp'] = otp
         request.session['reset_email'] = email
-
         try:
-            import ssl
-            import smtplib
+            import ssl, smtplib
             from email.mime.text import MIMEText
             from email.mime.multipart import MIMEMultipart
-
             msg = MIMEMultipart()
             msg['From'] = settings.EMAIL_HOST_USER
             msg['To'] = email
             msg['Subject'] = 'Solar CRM - Password Reset OTP'
             body = f'Hi {user.username},\n\nYour OTP for password reset is: {otp}\n\nValid for 10 minutes.\n\nIf you did not request this, ignore this email.'
             msg.attach(MIMEText(body, 'plain'))
-
             context = ssl.create_default_context()
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
-
             with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
                 server.ehlo()
                 server.starttls(context=context)
                 server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
                 server.sendmail(settings.EMAIL_HOST_USER, email, msg.as_string())
-
         except Exception as e:
             return render(request, 'forgot.html', {'message': f'Failed to send email: {str(e)}'})
-
         return redirect('verify_reset_otp')
     return render(request, 'forgot.html')
+
 
 def verify_reset_otp(request):
     if not request.session.get('reset_otp'):
@@ -693,13 +681,9 @@ def verify_reset_otp(request):
     if request.method == "POST":
         user_otp = request.POST.get('otp')
         if user_otp == request.session.get('reset_otp'):
-            # OTP correct — clear it so it can't be reused
             del request.session['reset_otp']
             return redirect('reset_password')
-        return render(request, 'forgot_verify.html', {
-            'message': 'Invalid OTP. Please try again.',
-            'email': email
-        })
+        return render(request, 'forgot_verify.html', {'message': 'Invalid OTP. Please try again.', 'email': email})
     return render(request, 'forgot_verify.html', {'email': email})
 
 
@@ -725,6 +709,7 @@ def reset_password(request):
             return render(request, 'reset_password.html', {'message': 'User not found'})
     return render(request, 'reset_password.html')
 
+
 # ================= AJAX VIEWS =================
 
 from django.http import JsonResponse
@@ -736,7 +721,6 @@ def ajax_dashboard_stats(request):
         all_leads = Lead.objects.all()
     else:
         all_leads = Lead.objects.filter(assigned_to=request.user)
-
     data = {
         'total_leads': all_leads.count(),
         'new_leads': all_leads.filter(status='New').count(),
@@ -756,12 +740,10 @@ def ajax_change_lead_status(request, id):
         lead = get_object_or_404(Lead, id=id, assigned_to=request.user)
     else:
         lead = get_object_or_404(Lead, id=id)
-    
     new_status = request.POST.get('status')
     valid = ['New', 'Contacted', 'Qualified', 'Proposal', 'Won', 'Lost']
     if new_status not in valid:
         return JsonResponse({'success': False, 'error': 'Invalid status'})
-    
     lead.status = new_status
     lead.save()
     return JsonResponse({'success': True, 'status': new_status})
@@ -783,56 +765,32 @@ def ajax_add_lead(request):
     try:
         assigned_id = request.POST.get('assigned_to')
         lead = Lead.objects.create(
-            name=request.POST.get('name'),
-            email=request.POST.get('email'),
-            phone=request.POST.get('phone'),
-            description=request.POST.get('description', ''),
-            status=request.POST.get('status', 'New'),
-            budget=request.POST.get('budget') or 0,
+            name=request.POST.get('name'), email=request.POST.get('email'),
+            phone=request.POST.get('phone'), description=request.POST.get('description', ''),
+            status=request.POST.get('status', 'New'), budget=request.POST.get('budget') or 0,
             assigned_to=User.objects.filter(id=assigned_id).first() if assigned_id else None
         )
-        return JsonResponse({
-            'success': True,
-            'lead': {
-                'id': lead.id,
-                'name': lead.name,
-                'email': lead.email,
-                'phone': lead.phone,
-                'status': lead.status,
-                'budget': str(lead.budget),
-                'date': lead.created_at.strftime('%d %b %Y'),
-            }
-        })
+        return JsonResponse({'success': True, 'lead': {
+            'id': lead.id, 'name': lead.name, 'email': lead.email,
+            'phone': lead.phone, 'status': lead.status,
+            'budget': str(lead.budget), 'date': lead.created_at.strftime('%d %b %Y'),
+        }})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
 
 @login_required
 def ajax_notifications(request):
-    from django.utils import timezone
     today = timezone.now().date()
-    
     if request.user.is_superuser:
-        upcoming = FollowUp.objects.filter(
-            follow_up_date=today, done=False
-        ).values('id', 'title', 'follow_up_time', 'lead__name')[:5]
-        new_leads = Lead.objects.filter(
-            status='New'
-        ).order_by('-created_at').values('id', 'name', 'created_at')[:5]
+        upcoming = FollowUp.objects.filter(follow_up_date=today, done=False).values('id', 'title', 'follow_up_time', 'lead__name')[:5]
+        new_leads = Lead.objects.filter(status='New').order_by('-created_at').values('id', 'name', 'created_at')[:5]
     else:
-        upcoming = FollowUp.objects.filter(
-            follow_up_date=today, done=False,
-            lead__assigned_to=request.user
-        ).values('id', 'title', 'follow_up_time', 'lead__name')[:5]
-        new_leads = Lead.objects.filter(
-            status='New', assigned_to=request.user
-        ).order_by('-created_at').values('id', 'name', 'created_at')[:5]
-
+        upcoming = FollowUp.objects.filter(follow_up_date=today, done=False, lead__assigned_to=request.user).values('id', 'title', 'follow_up_time', 'lead__name')[:5]
+        new_leads = Lead.objects.filter(status='New', assigned_to=request.user).order_by('-created_at').values('id', 'name', 'created_at')[:5]
     return JsonResponse({
-        'upcoming_count': upcoming.count(),
-        'upcoming': list(upcoming),
-        'new_leads_count': new_leads.count(),
-        'new_leads': list(new_leads),
+        'upcoming_count': upcoming.count(), 'upcoming': list(upcoming),
+        'new_leads_count': new_leads.count(), 'new_leads': list(new_leads),
         'total_notifications': upcoming.count() + new_leads.count()
     })
 
@@ -842,58 +800,14 @@ def ajax_live_search(request):
     query = request.GET.get('q', '').strip()
     if not query:
         return JsonResponse({'results': []})
-
     if request.user.is_superuser:
-        leads = Lead.objects.filter(
-            name__icontains=query
-        ) | Lead.objects.filter(
-            email__icontains=query
-        ) | Lead.objects.filter(
-            phone__icontains=query
-        )
+        leads = Lead.objects.filter(name__icontains=query) | Lead.objects.filter(email__icontains=query) | Lead.objects.filter(phone__icontains=query)
     else:
-        leads = Lead.objects.filter(
-            assigned_to=request.user
-        ).filter(
-            name__icontains=query
-        )
-
+        leads = Lead.objects.filter(assigned_to=request.user).filter(name__icontains=query)
     results = []
     for lead in leads[:8]:
-        results.append({
-            'id': lead.id,
-            'name': lead.name,
-            'email': lead.email,
-            'status': lead.status,
-            'type': 'lead'
-        })
-
-    customers = Customer.objects.filter(
-        name__icontains=query
-    )[:4] if request.user.is_superuser else []
-
+        results.append({'id': lead.id, 'name': lead.name, 'email': lead.email, 'status': lead.status, 'type': 'lead'})
+    customers = Customer.objects.filter(name__icontains=query)[:4] if request.user.is_superuser else []
     for c in customers:
-        results.append({
-            'id': c.id,
-            'name': c.name,
-            'email': c.email,
-            'status': 'Customer',
-            'type': 'customer'
-        })
-
+        results.append({'id': c.id, 'name': c.name, 'email': c.email, 'status': 'Customer', 'type': 'customer'})
     return JsonResponse({'results': results})
-
-@login_required
-def view_customer(request, id):
-    customer = get_object_or_404(Customer, id=id)
-    return render(request, 'view_customer.html', {'customer': customer})
-
-@login_required
-def view_project(request, id):
-    project = get_object_or_404(Project, id=id)
-    return render(request, 'view_project.html', {'project': project})
-
-@login_required
-def view_quote(request, id):
-    quotes = get_object_or_404(Quote, id=id)
-    return render(request, 'view_quote.html', {'quote': Quote})
