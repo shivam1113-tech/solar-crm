@@ -8,53 +8,61 @@
         * { box-sizing: border-box; }
         body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
         .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease; z-index: 1000; }
-        .sidebar.collapsed { width: 68px; }
-        .sidebar.collapsed .menu-label { display: none; }
-        .sidebar.collapsed .brand-text { display: none; }
-        .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
-        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; }
-        .brand span { color: #f59e0b; }
+        .sidebar.collapsed { width: 68px; } .sidebar.collapsed .menu-label, .sidebar.collapsed .brand-text { display: none; } .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
+        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; } .brand span { color: #f59e0b; }
         .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
-        .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
-        .menu a.active, .menu a:hover { background: #2563eb; color: white; }
-        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
-        .main.expanded { margin-left: 68px; }
+        .menu a i { flex-shrink: 0; width: 20px; text-align: center; } .menu a.active, .menu a:hover { background: #2563eb; color: white; }
+        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; } .main.expanded { margin-left: 68px; }
         .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999; }
-        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; }
-        .hamburger:hover { background: #f1f5f9; }
+        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; } .hamburger:hover { background: #f1f5f9; }
         .admin-box { display: flex; align-items: center; gap: 12px; }
         .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
-        .content { padding: 24px; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
-        .page-header h2 { font-weight: 800; margin-bottom: 5px; }
-        .add-btn { background: #2563eb; color: white; border: none; padding: 11px 20px; border-radius: 9px; text-decoration: none; font-size: 14px; }
-        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 22px; }
+        .content { padding: 28px 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; } .page-header h2 { font-weight: 800; margin-bottom: 5px; }
+        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 32px; max-width: 720px; box-shadow: 0 4px 24px rgba(37,99,235,0.07); animation: slideIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes slideIn { from { opacity:0; transform:translateY(24px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+        .section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin: 22px 0 14px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        label { font-weight: 600; font-size: 14px; color: #374151; margin-bottom: 6px; display: block; }
+        .form-control, .form-select { border: 1px solid #dbe3ef; border-radius: 10px; padding: 11px 14px; font-size: 15px; color: #111827; background: #f9fafb; width: 100%; transition: border 0.2s, box-shadow 0.2s, background 0.2s; }
+        .form-control:focus, .form-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: white; outline: none; }
+        textarea.form-control { resize: vertical; min-height: 110px; }
+
+        /* Lead info card shown after selection */
+        .lead-info-card { display: none; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 16px; margin-top: 10px; font-size: 13px; }
+        .lead-info-card.show { display: block; }
+        .lead-info-row { display: flex; align-items: center; gap: 8px; color: #374151; margin-bottom: 4px; }
+        .lead-info-row:last-child { margin-bottom: 0; }
+        .lead-info-row i { color: #2563eb; width: 14px; }
+
+        .btn-save { background: #2563eb; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
+        .btn-save:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.28); }
+        .btn-save:active { transform: translateY(0); }
+        .btn-cancel { background: white; color: #374151; border: 1px solid #dbe3ef; padding: 12px 22px; border-radius: 10px; font-size: 15px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s; }
+        .btn-cancel:hover { background: #f1f5f9; color: #111827; }
         .footer { text-align: center; padding: 24px; color: #64748b; border-top: 1px solid #e5e7eb; background: white; margin-top: 26px; }
-        label { font-weight: 600; margin-bottom: 4px; display: block; }
-        .form-control, .form-select { border-radius: 10px; padding: 10px 14px; border: 1px solid #dbe3ef; width: 100%; }
-        .btn-save { background: #2563eb; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; cursor: pointer; }
-        .btn-cancel { background: white; color: #64748b; border: 1px solid #dbe3ef; padding: 12px 28px; border-radius: 10px; font-size: 15px; text-decoration: none; }
+        .back-btn { color: #2563eb; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; } .back-btn:hover { color: #1d4ed8; }
     </style>
 </head>
 <body>
+
 <div class="sidebar" id="sidebar">
     <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
-   <div class="menu">
+    <div class="menu">
         <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label">Dashboard</span></a>
         <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
-        <a href="/tasks/"><i class="fa-solid fa-list-check"></i><span class="menu-label">Tasks</span></a>
         <a href="/followups/" class="active"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
         <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
-<a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
-<a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
-{% if request.user.is_superuser %}
-<a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
-<a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
-<a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
-{% endif %}
+        <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
+        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
+        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
+        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
+        {% endif %}
         <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
     </div>
 </div>
+
 <div class="main" id="main">
     <div class="topbar">
         <div class="d-flex align-items-center gap-3">
@@ -64,30 +72,126 @@
         <div class="admin-box">
             <i class="fa-regular fa-bell fs-5 text-muted"></i>
             <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
-            <div><strong style="font-size:14px;">{{ request.user.username }}</strong><br><small class="text-muted">Admin</small></div>
+            <div><strong style="font-size:14px;">{{ request.user.username }}</strong><br>
+            <small class="text-muted">{% if request.user.is_superuser %}Admin{% else %}Employee{% endif %}</small></div>
         </div>
     </div>
+
     <div class="content">
-        <div class="page-header"><div><h2>{{ title }}</h2><p class="text-muted mb-0">Schedule a follow up with a lead</p></div></div>
-        <div class="panel" style="max-width:700px;">
-            <form method="POST">{% csrf_token %}
+        <div class="page-header">
+            <div>
+                <h2>{{ title }}</h2>
+                <p class="text-muted mb-0" style="font-size:13px;">Schedule a follow up with a lead</p>
+            </div>
+            <a href="/followups/" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Follow Ups</a>
+        </div>
+
+        <div class="panel">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="section-title">Follow Up Details</div>
+
+                <!-- Title -->
+                <div class="mb-3">
+                    <label><i class="fa-solid fa-heading me-1 text-primary"></i> Title <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control"
+                        placeholder="e.g. Follow up call with Ramesh"
+                        value="{{ followup.title|default:'' }}" required>
+                </div>
+
+                <!-- Lead dropdown -->
+                <div class="mb-3">
+                    <label><i class="fa-solid fa-user me-1 text-primary"></i> Lead <span class="text-danger">*</span></label>
+                    <select name="lead" class="form-select" id="leadSelect" required onchange="showLeadInfo(this)">
+                        <option value="">-- Select Lead --</option>
+                        {% for l in leads %}
+                        <option value="{{ l.id }}"
+                            data-status="{{ l.status }}"
+                            data-assigned="{{ l.assigned_to.username|default:'Unassigned' }}"
+                            data-phone="{{ l.phone }}"
+                            data-email="{{ l.email }}"
+                            {% if followup.lead_id == l.id %}selected{% endif %}>
+                            {{ l.name }} — {{ l.status }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <!-- Lead info card shown after selection -->
+                    <div class="lead-info-card" id="leadInfoCard">
+                        <div class="lead-info-row"><i class="fa-solid fa-circle-dot"></i><span>Status: <strong id="li-status">—</strong></span></div>
+                        <div class="lead-info-row"><i class="fa-solid fa-user-tie"></i><span>Assigned To: <strong id="li-assigned">—</strong></span></div>
+                        <div class="lead-info-row"><i class="fa-solid fa-phone"></i><span>Phone: <strong id="li-phone">—</strong></span></div>
+                        <div class="lead-info-row"><i class="fa-solid fa-envelope"></i><span>Email: <strong id="li-email">—</strong></span></div>
+                    </div>
+                </div>
+
+                <div class="section-title">Schedule</div>
+
                 <div class="row g-3">
-                    <div class="col-12"><label>Title</label><input type="text" name="title" class="form-control" placeholder="e.g. Follow up call with Ramesh" value="{{ followup.title|default:'' }}" required></div>
-                    <div class="col-md-6"><label>Lead</label><select name="lead" class="form-select" required><option value="">-- Select Lead --</option>{% for l in leads %}<option value="{{ l.id }}" {% if followup.lead_id == l.id %}selected{% endif %}>{{ l.name }} ({{ l.status }})</option>{% endfor %}</select></div>
-                    <div class="col-md-6"><label>Follow Up Date</label><input type="date" name="follow_up_date" class="form-control" value="{{ followup.follow_up_date|default:'' }}" required></div>
-                    <div class="col-md-6"><label>Time <small class="text-muted fw-normal">(optional)</small></label></div>
-                    <div class="col-12"><label>Notes <small class="text-muted fw-normal">(optional)</small></label><textarea name="notes" class="form-control" rows="3" placeholder="Any details about this follow up...">{{ followup.notes|default:'' }}</textarea></div>
-                    <div class="col-12 d-flex gap-3 mt-2"><button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> Save Follow Up</button><a href="/followups/" class="btn-cancel">Cancel</a></div>
+                    <!-- Date -->
+                    <div class="col-md-6">
+                        <label><i class="fa-regular fa-calendar me-1 text-primary"></i> Follow Up Date <span class="text-danger">*</span></label>
+                        <input type="date" name="follow_up_date" class="form-control"
+                            value="{{ followup.follow_up_date|default:'' }}" required>
+                    </div>
+                    <!-- Time -->
+                    <div class="col-md-6">
+                        <label><i class="fa-regular fa-clock me-1 text-primary"></i> Time <small class="text-muted fw-normal">(optional)</small></label>
+                        <input type="time" name="follow_up_time" class="form-control"
+                            value="{{ followup.follow_up_time|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="section-title">Notes</div>
+
+                <div class="mb-3">
+                    <label><i class="fa-solid fa-note-sticky me-1 text-primary"></i> Notes <small class="text-muted fw-normal">(optional)</small></label>
+                    <textarea name="notes" class="form-control"
+                        placeholder="Any details about this follow up...">{{ followup.notes|default:'' }}</textarea>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-3 mt-3 flex-wrap">
+                    <button type="submit" class="btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        {% if followup %}Update Follow Up{% else %}Save Follow Up{% endif %}
+                    </button>
+                    <a href="/followups/" class="btn-cancel">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </a>
                 </div>
             </form>
         </div>
     </div>
     <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');document.getElementById('main').classList.toggle('expanded');}</script>
 <script>
-document.querySelectorAll('input[type="text"], input[type="email"], textarea').forEach(el => {
+function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+}
+
+// Show lead info card when lead is selected
+function showLeadInfo(select) {
+    const opt = select.options[select.selectedIndex];
+    const card = document.getElementById('leadInfoCard');
+    if (!opt.value) { card.classList.remove('show'); return; }
+    document.getElementById('li-status').textContent   = opt.dataset.status   || '—';
+    document.getElementById('li-assigned').textContent = opt.dataset.assigned || 'Unassigned';
+    document.getElementById('li-phone').textContent    = opt.dataset.phone    || '—';
+    document.getElementById('li-email').textContent    = opt.dataset.email    || '—';
+    card.classList.add('show');
+}
+
+// Auto-show info if lead already selected (edit mode)
+window.addEventListener('DOMContentLoaded', () => {
+    const sel = document.getElementById('leadSelect');
+    if (sel && sel.value) showLeadInfo(sel);
+});
+
+document.querySelectorAll('input[type="text"], textarea').forEach(el => {
     el.addEventListener('input', function() {
         let pos = this.selectionStart;
         this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);

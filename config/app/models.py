@@ -11,6 +11,7 @@ class Lead(models.Model):
         ('Won', 'Won'),
         ('Lost', 'Lost'),
     ]
+
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=15)
@@ -19,6 +20,9 @@ class Lead(models.Model):
     budget = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_leads')
+
+    monthly_bill = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    solar_kwh_required = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -86,25 +90,7 @@ class Invoice(models.Model):
 
     def __str__(self):
         return f"Invoice #{self.id} - {self.customer.name}"
-
-
-class Task(models.Model):
-    PRIORITY_CHOICES = [
-        ('Low', 'Low'),
-        ('Medium', 'Medium'),
-        ('High', 'High'),
-    ]
-    title = models.CharField(max_length=200)
-    description = models.TextField(blank=True, null=True)
-    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    lead = models.ForeignKey(Lead, on_delete=models.SET_NULL, null=True, blank=True)
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Medium')
-    due_date = models.DateField(null=True, blank=True)
-    completed = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
+    
 
 
 class FollowUp(models.Model):

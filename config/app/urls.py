@@ -49,13 +49,6 @@ urlpatterns = [
     path('invoices/<int:id>/view/', views.view_invoice, name='view_invoice'),
     path('invoices/<int:id>/delete/', views.delete_invoice, name='delete_invoice'),
 
-    # ✅ Tasks
-    path('tasks/', views.tasks, name='tasks'),
-    path('tasks/add/', views.add_task, name='add_task'),
-    path('tasks/<int:id>/view/', views.view_task, name='view_task'),
-    path('tasks/<int:id>/toggle/', views.toggle_task, name='toggle_task'),
-    path('tasks/<int:id>/edit/', views.edit_task, name='edit_task'),
-    path('tasks/<int:id>/delete/', views.delete_task, name='delete_task'),
 
     # 📞 Follow Ups
     path('followups/', views.followups, name='followups'),

@@ -16,59 +16,94 @@
         .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
         .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
         .menu a.active, .menu a:hover { background: #2563eb; color: white; }
+        .menu a:hover { transform: translateX(3px); }
         .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
         .main.expanded { margin-left: 68px; }
         .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999; }
-        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; transition: background 0.2s; } .hamburger:hover { background: #f1f5f9; }
+        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; transition: background 0.2s, transform 0.15s; } .hamburger:hover { background: #f1f5f9; transform: scale(1.08); }
         .admin-box { display: flex; align-items: center; gap: 12px; }
         .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
         .content { padding: 24px; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
         .page-header h2 { font-weight: 800; margin-bottom: 5px; }
-        .add-btn { background: #2563eb; color: white; border: none; padding: 11px 20px; border-radius: 9px; text-decoration: none; font-size: 14px; cursor: pointer; }
+        .add-btn { background: #2563eb; color: white; border: none; padding: 11px 20px; border-radius: 9px; text-decoration: none; font-size: 14px; cursor: pointer; font-weight: 600; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; display: inline-flex; align-items: center; gap: 7px; }
+        .add-btn:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.28); }
         .badge-soft { padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
         .badge-new { background: #dbeafe; color: #1d4ed8; } .badge-contacted { background: #dcfce7; color: #15803d; } .badge-qualified { background: #ffedd5; color: #c2410c; } .badge-proposal { background: #ede9fe; color: #6d28d9; } .badge-won { background: #dcfce7; color: #15803d; } .badge-lost { background: #fee2e2; color: #b91c1c; }
         .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 22px; }
         .footer { text-align: center; padding: 24px; color: #64748b; border-top: 1px solid #e5e7eb; background: white; margin-top: 26px; }
-        .status-select { border: none; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; }
+        .status-select { border: none; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; transition: transform 0.15s; }
+        .status-select:hover { transform: scale(1.04); }
         .status-new { background: #dbeafe; color: #1d4ed8; } .status-contacted { background: #dcfce7; color: #15803d; } .status-qualified { background: #ffedd5; color: #c2410c; } .status-proposal { background: #ede9fe; color: #6d28d9; } .status-won { background: #dcfce7; color: #15803d; } .status-lost { background: #fee2e2; color: #b91c1c; }
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
         .toast-msg { background: white; border-left: 4px solid #22c55e; border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); font-size: 14px; min-width: 280px; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease; }
         .toast-msg.error { border-left-color: #ef4444; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-        .modal-content { border-radius: 16px; border: none; } .modal-header { background: linear-gradient(135deg, #071b36, #0b2547); color: white; border-radius: 16px 16px 0 0; } .modal-header .btn-close { filter: invert(1); }
-        .form-control, .form-select { border-radius: 10px; border: 1px solid #dbe3ef; padding: 10px 14px; } .form-control:focus, .form-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        /* Modal */
+        .modal-content { border-radius: 18px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalPop 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.94) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-header { background: linear-gradient(135deg, #071b36, #1d4ed8); color: white; border-radius: 18px 18px 0 0; padding: 18px 24px; }
+        .modal-header .btn-close { filter: invert(1); }
+        .modal-body { padding: 24px; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #f1f5f9; }
+        .form-label-modal { font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 5px; display: block; }
+        .form-control, .form-select { border-radius: 10px; border: 1px solid #dbe3ef; padding: 10px 14px; font-size: 14px; background: #f9fafb; transition: border 0.2s, box-shadow 0.2s, transform 0.15s; }
+        .form-control:hover, .form-select:hover { border-color: #93c5fd; transform: translateY(-1px); }
+        .form-control:focus, .form-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); background: white; outline: none; transform: translateY(-1px); }
+
+        /* Solar calculator box */
+        .solar-calc-box { background: linear-gradient(135deg, #eff6ff, #f0fdf4); border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 16px 18px; }
+        .solar-calc-box .calc-title { font-size: 12px; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .calc-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #dbeafe; font-size: 13px; }
+        .calc-row:last-child { border-bottom: none; }
+        .calc-row .label { color: #64748b; }
+        .calc-row .value { font-weight: 700; color: #111827; }
+        .calc-row .value.highlight { color: #2563eb; font-size: 15px; }
+        .calc-row .value.green { color: #16a34a; }
+
+        .section-divider { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin: 18px 0 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; }
+
         .search-wrapper { position: relative; } .search-box { width: 300px; border: 1px solid #dbe3ef; border-radius: 10px; padding: 9px 14px 9px 36px; color: #64748b; font-size: 14px; } .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
         .search-results { position: absolute; top: 44px; left: 0; width: 360px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); z-index: 9999; display: none; max-height: 300px; overflow-y: auto; }
         .search-result-item { padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s; } .search-result-item:hover { background: #f8fafc; }
         .search-mini-avatar { width: 30px; height: 30px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
         .notif-bell { position: relative; cursor: pointer; } .notif-badge { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
         .notif-dropdown { position: absolute; top: 36px; right: -10px; width: 320px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); z-index: 9999; display: none; }
-        .notif-header { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 14px; } .notif-item { padding: 10px 16px; border-bottom: 1px solid #f8fafc; font-size: 13px; } .notif-item:last-child { border-bottom: none; }
+        .notif-header { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 14px; } .notif-item { padding: 10px 16px; border-bottom: 1px solid #f8fafc; font-size: 13px; }
         .row-deleting { background: #fee2e2 !important; transition: all 0.4s; opacity: 0.5; }
+        .btn-modal-primary { background: #2563eb; color: white; border: none; padding: 11px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
+        .btn-modal-primary:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.28); }
+        .btn-modal-secondary { background: white; color: #374151; border: 1px solid #dbe3ef; padding: 11px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.15s; }
+        .btn-modal-secondary:hover { background: #f1f5f9; transform: translateY(-1px); }
+
+        @media (max-width: 768px) { .sidebar { width: 68px; } .sidebar .menu-label, .sidebar .brand-text { display: none; } .sidebar .menu a { justify-content: center; padding: 13px 0; } .main { margin-left: 68px; } .content { padding: 14px; } .topbar { padding: 0 14px; } }
     </style>
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- Sidebar -->
 <div class="sidebar" id="sidebar">
     <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
     <div class="menu">
-        <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label">Dashboard</span></a>
-        <a href="/leads/" class="active"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
-        <a href="/tasks/"><i class="fa-solid fa-list-check"></i><span class="menu-label">Tasks</span></a>
-        <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
-        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
-<a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
-<a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
-{% if request.user.is_superuser %}
-<a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
-<a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
-<a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
-{% endif %}
-        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
+        <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label"> Dashboard</span></a>
+        <a href="/leads/" class="active"><i class="fa-solid fa-users"></i><span class="menu-label"> Leads</span></a>
+        <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label"> Follow Ups</span></a>
+        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label"> Customers</span></a>
+        <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label"> Projects</span></a>
+        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label"> Quotes</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label"> Invoices</span></a>
+        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label"> Import Leads</span></a>
+        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label"> Employees</span></a>
+        {% endif %}
+        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label"> Logout</span></a>
     </div>
 </div>
+
+<!-- Main -->
 <div class="main" id="main">
     <div class="topbar">
         <div class="d-flex align-items-center gap-3">
@@ -93,37 +128,53 @@
             <small class="text-muted">{% if request.user.is_superuser %}Admin{% else %}Employee{% endif %}</small></div>
         </div>
     </div>
+
     <div class="content">
         <div class="page-header">
-            <div><h2>Leads</h2><p class="text-muted mb-0">All your leads in one place</p></div>
+            <div><h2>Leads</h2><p class="text-muted mb-0" style="font-size:13px;">All your leads in one place</p></div>
             {% if request.user.is_superuser %}
             <button class="add-btn" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Lead</button>
             {% endif %}
         </div>
+
         {% if messages %}{% for msg in messages %}
         <div class="alert alert-success alert-dismissible fade show">{{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
         {% endfor %}{% endif %}
+
         <div class="panel">
             {% if leads %}
             <div class="table-responsive">
                 <table id="dataTable" class="table table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Budget</th><th>Date</th><th>Actions</th></tr>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Assigned To</th>
+                            <th>Bill/Month</th>
+                            <th>Solar Req.</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
                         {% for lead in leads %}
                         <tr id="row-{{ lead.id }}">
                             <td class="text-muted">{{ forloop.counter }}</td>
-                            <td><strong>{{ lead.name }}</strong></td>
-                            <td>{{ lead.email }}</td>
+
+                            <td>
+                                <strong>{{ lead.name }}</strong><br>
+                                <small class="text-muted">{{ lead.email }}</small>
+                            </td>
+
                             <td>{{ lead.phone }}</td>
+
                             <td>
                                 {% if request.user.is_superuser %}
-                                <select 
-    class="status-select status-{{ lead.status|lower }}"
-    data-lead-id="{{ lead.id }}"
-    onchange="changeStatus(this.dataset.leadId, this)"
-    title="Click to change status">
+                                <select class="status-select status-{{ lead.status|lower }}"
+                                        data-lead-id="{{ lead.id }}"
+                                        onchange="changeStatus(this.dataset.leadId, this)">
                                     <option value="New" {% if lead.status == "New" %}selected{% endif %}>New</option>
                                     <option value="Contacted" {% if lead.status == "Contacted" %}selected{% endif %}>Contacted</option>
                                     <option value="Qualified" {% if lead.status == "Qualified" %}selected{% endif %}>Qualified</option>
@@ -135,19 +186,38 @@
                                 <span class="badge-soft badge-{{ lead.status|lower }}">{{ lead.status }}</span>
                                 {% endif %}
                             </td>
-                            <td>₹{{ lead.budget|floatformat:0 }}</td>
-                            <td class="text-muted">{{ lead.created_at|date:"d M Y" }}</td>
+
                             <td>
-                                <a href="/lead/{{ lead.id }}/" class="btn btn-sm btn-outline-primary">View</a>
-                                <a href="/edit-lead/{{ lead.id }}/" class="btn btn-sm btn-outline-warning">Edit</a>
+                                {% if lead.assigned_to %}
+                                    {{ lead.assigned_to.username }}
+                                {% else %}
+                                    <span class="text-muted">Unassigned</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if lead.monthly_bill %}
+                                    ₹{{ lead.monthly_bill|floatformat:0 }}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if lead.solar_kwh_required %}
+                                    <span style="color:#16a34a;font-weight:700;">{{ lead.solar_kwh_required }} kW</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-muted">{{ lead.created_at|date:"d M Y" }}</td>
+
+                            <td>
+                                <a href="/lead/{{ lead.id }}/" class="btn btn-sm btn-outline-primary" style="transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">View</a>
+                                <a href="/edit-lead/{{ lead.id }}/" class="btn btn-sm btn-outline-warning" style="transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Edit</a>
                                 {% if request.user.is_superuser %}
-                                <button 
-    class="btn btn-sm btn-outline-danger"
-    data-lead-id="{{ lead.id }}"
-    data-lead-name="{{ lead.name }}"
-    onclick="deleteLead(this.dataset.leadId, this.dataset.leadName)">
-    Delete
-</button>
+                                <button class="btn btn-sm btn-outline-danger" data-lead-id="{{ lead.id }}" data-lead-name="{{ lead.name }}" onclick="deleteLead(this.dataset.leadId, this.dataset.leadName)" style="transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Delete</button>
                                 {% endif %}
                             </td>
                         </tr>
@@ -159,7 +229,7 @@
             <div class="text-center py-5">
                 <i class="fa-solid fa-users fa-3x text-muted mb-3"></i>
                 <p class="text-muted">No leads yet.</p>
-                {% if request.user.is_superuser %}<button class="add-btn" onclick="openAddModal()">+ Add First Lead</button>{% endif %}
+                {% if request.user.is_superuser %}<button class="add-btn" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add First Lead</button>{% endif %}
             </div>
             {% endif %}
         </div>
@@ -167,28 +237,94 @@
     <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
 </div>
 
+<!-- ── Add Lead Modal ── -->
 {% if request.user.is_superuser %}
 <div class="modal fade" id="addLeadModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title"><i class="fa-solid fa-user-plus me-2"></i>Add New Lead</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body">
+
+                <div class="section-divider">Contact Information</div>
                 <div class="row g-3">
-                    <div class="col-md-6"><label class="fw-600 mb-1">Full Name *</label><input type="text" id="m_name" class="form-control" placeholder="e.g. Ramesh Patel"></div>
-                    <div class="col-md-6"><label class="fw-600 mb-1">Phone *</label><input type="text" id="m_phone" class="form-control" placeholder="e.g. 9876543210"></div>
-                    <div class="col-md-6"><label class="fw-600 mb-1">Email *</label><input type="email" id="m_email" class="form-control" placeholder="e.g. ramesh@example.com"></div>
-                    <div class="col-md-6"><label class="fw-600 mb-1">Budget (₹)</label><input type="number" id="m_budget" class="form-control" placeholder="e.g. 150000"></div>
-                    <div class="col-md-6"><label class="fw-600 mb-1">Status</label><select id="m_status" class="form-select"><option value="New">🔵 New</option><option value="Contacted">🟢 Contacted</option><option value="Qualified">🟠 Qualified</option><option value="Proposal">🟣 Proposal</option></select></div>
-                    <div class="col-md-6"><label class="fw-600 mb-1">Assign To</label><select id="m_assigned" class="form-select"><option value="">-- Unassigned --</option>{% for emp in employees %}<option value="{{ emp.id }}">{{ emp.username }}</option>{% endfor %}</select></div>
-                    <div class="col-12"><label class="fw-600 mb-1">Notes</label><textarea id="m_description" class="form-control" rows="3" placeholder="Any notes..."></textarea></div>
+                    <div class="col-md-6">
+                        <label class="form-label-modal">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" id="m_name" class="form-control" placeholder="e.g. Ramesh Patel">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-modal">Phone <span class="text-danger">*</span></label>
+                        <input type="text" id="m_phone" class="form-control" placeholder="e.g. 9876543210">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-modal">Email <span class="text-danger">*</span></label>
+                        <input type="email" id="m_email" class="form-control" placeholder="e.g. ramesh@example.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-modal">Assign To</label>
+                        <select id="m_assigned" class="form-select">
+                            <option value="">-- Unassigned --</option>
+                            {% for emp in employees %}<option value="{{ emp.id }}">{{ emp.username }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-modal">Status</label>
+                        <select id="m_status" class="form-select">
+                            <option value="New">🔵 New</option>
+                            <option value="Contacted">🟢 Contacted</option>
+                            <option value="Qualified">🟠 Qualified</option>
+                            <option value="Proposal">🟣 Proposal</option>
+                            <option value="Won">✅ Won</option>
+                            <option value="Lost">❌ Lost</option>
+                        </select>
+                    </div>
                 </div>
+
+                <div class="section-divider" style="margin-top:20px;">Solar Requirement</div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-modal">Monthly Electricity Bill (₹)</label>
+                        <input type="number" id="m_bill" class="form-control" placeholder="e.g. 3500" oninput="calcSolar()">
+                        <small class="text-muted" style="font-size:11px;">Enter average monthly bill amount</small>
+                    </div>
+                    <div class="col-md-6">
+                        <!-- Auto Solar Calculator -->
+                        <div class="solar-calc-box" id="solarCalcBox">
+                            <div class="calc-title"><i class="fa-solid fa-solar-panel"></i> Solar Requirement (Auto)</div>
+                            <div class="calc-row">
+                                <span class="label">Monthly Units (kWh)</span>
+                                <span class="value" id="calc_units">—</span>
+                            </div>
+                            <div class="calc-row">
+                                <span class="label">Solar System Size</span>
+                                <span class="value highlight" id="calc_kw">—</span>
+                            </div>
+                            <div class="calc-row">
+                                <span class="label">Panels Required (~400W)</span>
+                                <span class="value" id="calc_panels">—</span>
+                            </div>
+                            <div class="calc-row">
+                                <span class="label">Est. Installation Cost</span>
+                                <span class="value green" id="calc_cost">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider" style="margin-top:20px;">Additional Info</div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label-modal">Description / Notes</label>
+                        <textarea id="m_description" class="form-control" rows="3" placeholder="Any notes about this lead..."></textarea>
+                    </div>
+                </div>
+
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitAddLead()"><i class="fa-solid fa-plus"></i> Add Lead</button>
+                <button type="button" class="btn-modal-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-modal-primary" onclick="submitAddLead()"><i class="fa-solid fa-plus"></i> Add Lead</button>
             </div>
         </div>
     </div>
@@ -206,70 +342,120 @@
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 <script>
 const CSRF = '{{ csrf_token }}';
+
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('collapsed'); document.getElementById('main').classList.toggle('expanded'); }
+
 $(document).ready(function() {
-    $('#dataTable').DataTable({ dom: 'Bfrtip', buttons: ['csv', 'excel', 'print'], pageLength: 10, language: { search: "🔍 Search:", lengthMenu: "Show _MENU_ entries", info: "Showing _START_ to _END_ of _TOTAL_ entries", paginate: { first: "First", last: "Last", next: "Next →", previous: "← Prev" } } });
+    $('#dataTable').DataTable({ dom: 'Bfrtip', buttons: ['csv', 'excel', 'print'], pageLength: 10, language: { search: "🔍 Search:", lengthMenu: "Show _MENU_ entries", info: "Showing _START_ to _END_ of _TOTAL_ entries", paginate: { next: "Next →", previous: "← Prev" } } });
 });
+
+// ── Solar Calculator ──
+function calcSolar() {
+    const bill = parseFloat(document.getElementById('m_bill').value) || 0;
+    if (bill <= 0) {
+        document.getElementById('calc_units').textContent = '—';
+        document.getElementById('calc_kw').textContent = '—';
+        document.getElementById('calc_panels').textContent = '—';
+        document.getElementById('calc_cost').textContent = '—';
+        return;
+    }
+    // Avg rate ₹7/unit in India, 1kW solar = ~4 units/day = ~120 units/month
+    const avgRate = 7;
+    const units = Math.round(bill / avgRate);
+    const kwRequired = (units / 120).toFixed(2);
+    const panels = Math.ceil(parseFloat(kwRequired) * 1000 / 400);
+    const costPerKw = 60000; // avg ₹60,000/kW installed
+    const totalCost = Math.round(parseFloat(kwRequired) * costPerKw);
+
+    document.getElementById('calc_units').textContent = units + ' kWh';
+    document.getElementById('calc_kw').textContent = kwRequired + ' kW';
+    document.getElementById('calc_panels').textContent = panels + ' panels';
+    document.getElementById('calc_cost').textContent = '₹' + totalCost.toLocaleString('en-IN');
+}
+
 function showToast(msg, type='success') {
-    const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
     toast.className = 'toast-msg' + (type === 'error' ? ' error' : '');
     toast.innerHTML = `<i class="fa-solid fa-${type === 'success' ? 'circle-check' : 'circle-xmark'}" style="color:${type === 'success' ? '#22c55e' : '#ef4444'}"></i> ${msg}`;
     container.appendChild(toast);
     setTimeout(() => { toast.style.animation = 'slideOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
+
 function changeStatus(id, select) {
     const newStatus = select.value; const oldStatus = select.dataset.old || select.value;
     select.className = 'status-select status-' + newStatus.toLowerCase();
     fetch(`/ajax/lead/${id}/status/`, { method: 'POST', headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded' }, body: `status=${newStatus}` })
-    .then(r => r.json()).then(data => { if (data.success) { showToast(`Status changed to ${newStatus}!`); select.dataset.old = newStatus; } else { showToast('Failed to update status', 'error'); select.value = oldStatus; } })
+    .then(r => r.json()).then(data => { if (data.success) { showToast(`Status changed to ${newStatus}!`); select.dataset.old = newStatus; } else { showToast('Failed to update', 'error'); select.value = oldStatus; } })
     .catch(() => showToast('Network error', 'error'));
 }
+
 function deleteLead(id, name) {
     if (!confirm(`Delete lead "${name}"? This cannot be undone.`)) return;
     const row = document.getElementById('row-' + id); row.classList.add('row-deleting');
     fetch(`/ajax/lead/${id}/delete/`, { method: 'POST', headers: { 'X-CSRFToken': CSRF } })
     .then(r => r.json()).then(data => {
-        if (data.success) { setTimeout(() => { row.style.height = row.offsetHeight + 'px'; row.style.overflow = 'hidden'; row.style.transition = 'height 0.3s ease, opacity 0.3s ease'; setTimeout(() => { row.style.height = '0'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }, 50); }, 200); showToast(`Lead "${name}" deleted successfully!`); }
+        if (data.success) { setTimeout(() => { row.style.height = row.offsetHeight + 'px'; row.style.overflow = 'hidden'; row.style.transition = 'height 0.3s, opacity 0.3s'; setTimeout(() => { row.style.height = '0'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }, 50); }, 200); showToast(`"${name}" deleted!`); }
         else { row.classList.remove('row-deleting'); showToast(data.error || 'Failed to delete', 'error'); }
     }).catch(() => { row.classList.remove('row-deleting'); showToast('Network error', 'error'); });
 }
-function openAddModal() { new bootstrap.Modal(document.getElementById('addLeadModal')).show(); }
+
+function openAddModal() {
+    document.getElementById('m_bill').value = '';
+    calcSolar();
+    new bootstrap.Modal(document.getElementById('addLeadModal')).show();
+}
+
 function submitAddLead() {
-    const name = document.getElementById('m_name').value.trim(); const email = document.getElementById('m_email').value.trim(); const phone = document.getElementById('m_phone').value.trim();
+    const name = document.getElementById('m_name').value.trim();
+    const email = document.getElementById('m_email').value.trim();
+    const phone = document.getElementById('m_phone').value.trim();
     if (!name || !email || !phone) { showToast('Name, Email and Phone are required!', 'error'); return; }
     const formData = new FormData();
     formData.append('name', name); formData.append('email', email); formData.append('phone', phone);
-    formData.append('budget', document.getElementById('m_budget').value || 0); formData.append('status', document.getElementById('m_status').value); formData.append('description', document.getElementById('m_description').value);
+    formData.append('status', document.getElementById('m_status').value);
+    formData.append('monthly_bill', document.getElementById('m_bill').value || 0);
+    const solarText = document.getElementById('calc_kw').textContent.replace(' kW', '').trim();
+    formData.append('solar_kwh_required', solarText === '—' ? '' : solarText);
+    formData.append('description', document.getElementById('m_description').value);
     const assigned = document.getElementById('m_assigned'); if (assigned) formData.append('assigned_to', assigned.value);
     fetch('/ajax/lead/add/', { method: 'POST', headers: { 'X-CSRFToken': CSRF }, body: formData })
-    .then(r => r.json()).then(data => { if (data.success) { bootstrap.Modal.getInstance(document.getElementById('addLeadModal')).hide(); showToast(`Lead "${data.lead.name}" added! Refreshing...`); setTimeout(() => location.reload(), 1500); } else { showToast(data.error || 'Failed to add lead', 'error'); } })
-    .catch(() => showToast('Network error', 'error'));
+    .then(r => r.json()).then(data => {
+        if (data.success) { bootstrap.Modal.getInstance(document.getElementById('addLeadModal')).hide(); showToast(`Lead "${data.lead.name}" added!`); setTimeout(() => location.reload(), 1500); }
+        else { showToast(data.error || 'Failed to add lead', 'error'); }
+    }).catch(() => showToast('Network error', 'error'));
 }
+
+// Live search
 let searchTimeout;
 document.getElementById('liveSearch').addEventListener('input', function() {
     clearTimeout(searchTimeout); const q = this.value.trim(); const results = document.getElementById('searchResults');
     if (q.length < 2) { results.style.display = 'none'; return; }
     searchTimeout = setTimeout(() => {
         fetch(`/ajax/search/?q=${encodeURIComponent(q)}`).then(r => r.json()).then(data => {
-            if (data.results.length === 0) { results.innerHTML = '<div class="notif-item text-muted">No results found</div>'; }
-            else { results.innerHTML = data.results.map(r => `<div class="search-result-item" onclick="window.location='/${r.type === 'lead' ? 'lead' : 'customers'}/${r.id}/'"><div class="search-mini-avatar">${r.name.substring(0,2).toUpperCase()}</div><div><strong style="font-size:13px;">${r.name}</strong><br><small class="text-muted">${r.email} · <span class="badge-soft badge-${r.status.toLowerCase()}">${r.status}</span></small></div></div>`).join(''); }
+            if (data.results.length === 0) { results.innerHTML = '<div style="padding:12px 16px;color:#94a3b8;font-size:13px;">No results found</div>'; }
+            else { results.innerHTML = data.results.map(r => `<div class="search-result-item" onclick="window.location='/${r.type === 'lead' ? 'lead' : 'customers'}/${r.id}/'"><div class="search-mini-avatar">${r.name.substring(0,2).toUpperCase()}</div><div><strong style="font-size:13px;">${r.name}</strong><br><small style="color:#64748b;">${r.email} · ${r.status}</small></div></div>`).join(''); }
             results.style.display = 'block';
         });
     }, 300);
 });
-document.addEventListener('click', function(e) { if (!e.target.closest('.search-wrapper')) document.getElementById('searchResults').style.display = 'none'; });
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-wrapper')) document.getElementById('searchResults').style.display = 'none';
+    if (!e.target.closest('#notifBell')) document.getElementById('notifDropdown').style.display = 'none';
+});
+
 function loadNotifications() {
     fetch('/ajax/notifications/').then(r => r.json()).then(data => {
         const badge = document.getElementById('notifCount'); const list = document.getElementById('notifList');
         if (data.total_notifications > 0) { badge.style.display = 'flex'; badge.textContent = data.total_notifications > 9 ? '9+' : data.total_notifications; } else { badge.style.display = 'none'; }
         let html = '';
-        data.upcoming.forEach(f => { html += `<div class="notif-item"><i class="fa-solid fa-phone text-primary me-2"></i><strong>${f.title}</strong> - ${f.lead__name}<small class="d-block text-muted">${f.follow_up_time || 'Today'}</small></div>`; });
+        data.upcoming.forEach(f => { html += `<div class="notif-item"><i class="fa-solid fa-phone text-primary me-2"></i><strong>${f.title}</strong> - ${f.lead__name}</div>`; });
         data.new_leads.forEach(l => { html += `<div class="notif-item"><i class="fa-solid fa-user-plus text-success me-2"></i>New lead: <strong>${l.name}</strong></div>`; });
         list.innerHTML = html || '<div class="notif-item text-muted">No notifications</div>';
     });
 }
-function toggleNotifications() { const dropdown = document.getElementById('notifDropdown'); dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none'; }
-document.addEventListener('click', function(e) { if (!e.target.closest('#notifBell')) document.getElementById('notifDropdown').style.display = 'none'; });
+function toggleNotifications() { const d = document.getElementById('notifDropdown'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
 loadNotifications(); setInterval(loadNotifications, 30000);
 </script>
 </body>

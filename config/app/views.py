@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
-from .models import Lead, Customer, Project, Quote, Invoice, Task, FollowUp
+from .models import Lead, Customer, Project, Quote, Invoice, FollowUp
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import HttpResponseForbidden
@@ -99,6 +99,10 @@ def add_lead(request):
     employees = User.objects.filter(is_superuser=False, is_active=True)
     if request.method == "POST":
         assigned_id = request.POST.get('assigned_to')
+        # ── FIXED: clean solar fields ──
+        monthly_bill = request.POST.get('monthly_bill') or None
+        solar_kwh_required = request.POST.get('solar_kwh_required') or None
+
         Lead.objects.create(
             name=request.POST.get('name'),
             email=request.POST.get('email'),
@@ -106,6 +110,8 @@ def add_lead(request):
             description=request.POST.get('description'),
             status=request.POST.get('status'),
             budget=request.POST.get('budget') or 0,
+            monthly_bill=monthly_bill,
+            solar_kwh_required=solar_kwh_required,
             assigned_to=User.objects.filter(id=assigned_id).first() if assigned_id else None
         )
         messages.success(request, "Lead added successfully")
@@ -128,6 +134,9 @@ def edit_lead(request, id):
         lead.description = request.POST.get('description')
         lead.status = request.POST.get('status')
         lead.budget = request.POST.get('budget') or 0
+        # ── FIXED: save solar fields ──
+        lead.monthly_bill = request.POST.get('monthly_bill') or None
+        lead.solar_kwh_required = request.POST.get('solar_kwh_required') or None
         lead.assigned_to = User.objects.filter(id=assigned_id).first() if assigned_id else None
         lead.save()
         messages.success(request, "Lead updated successfully")
@@ -300,7 +309,6 @@ def quotes(request):
 
 @login_required
 def view_quote(request, id):
-    # FIXED: was using wrong variable name
     quote = get_object_or_404(Quote, id=id)
     return render(request, 'view_quote.html', {'quote': quote})
 
@@ -393,81 +401,6 @@ def delete_invoice(request, id):
     invoice.delete()
     messages.success(request, "Invoice deleted")
     return redirect('invoices')
-
-
-# ================= TASKS =================
-
-@login_required
-def tasks(request):
-    if request.user.is_superuser:
-        tasks = Task.objects.all().order_by('-created_at')
-    else:
-        tasks = Task.objects.filter(assigned_to=request.user).order_by('-created_at')
-    return render(request, 'tasks.html', {'tasks': tasks})
-
-
-@login_required
-def view_task(request, id):
-    task = get_object_or_404(Task, id=id)
-    if not request.user.is_superuser and task.assigned_to != request.user:
-        messages.error(request, "Access denied")
-        return redirect('tasks')
-    return render(request, 'view_task.html', {'task': task})
-
-
-@login_required
-def add_task(request):
-    if request.user.is_superuser:
-        leads = Lead.objects.all()
-    else:
-        leads = Lead.objects.filter(assigned_to=request.user)
-    if request.method == "POST":
-        Task.objects.create(
-            title=request.POST.get('title'),
-            description=request.POST.get('description'),
-            lead=Lead.objects.filter(id=request.POST.get('lead')).first(),
-            assigned_to=request.user,
-            priority=request.POST.get('priority'),
-            due_date=request.POST.get('due_date') or None,
-        )
-        messages.success(request, "Task added successfully")
-        return redirect('tasks')
-    return render(request, 'task_form.html', {'title': 'Add Task', 'leads': leads})
-
-
-@login_required
-def toggle_task(request, id):
-    task = get_object_or_404(Task, id=id)
-    task.completed = not task.completed
-    task.save()
-    return redirect('tasks')
-
-
-@login_required
-def delete_task(request, id):
-    if not request.user.is_superuser:
-        messages.error(request, "Only admin can delete tasks")
-        return redirect('tasks')
-    task = get_object_or_404(Task, id=id)
-    task.delete()
-    messages.success(request, "Task deleted")
-    return redirect('tasks')
-
-
-@login_required
-def edit_task(request, id):
-    task = get_object_or_404(Task, id=id)
-    leads = Lead.objects.all() if request.user.is_superuser else Lead.objects.filter(assigned_to=request.user)
-    if request.method == "POST":
-        task.title = request.POST.get('title')
-        task.description = request.POST.get('description')
-        task.lead = Lead.objects.filter(id=request.POST.get('lead')).first()
-        task.priority = request.POST.get('priority')
-        task.due_date = request.POST.get('due_date') or None
-        task.save()
-        messages.success(request, "Task updated successfully")
-        return redirect('tasks')
-    return render(request, 'task_form.html', {'title': 'Edit Task', 'task': task, 'leads': leads})
 
 
 # ================= FOLLOW UPS =================
@@ -762,18 +695,29 @@ def ajax_delete_lead(request, id):
 @login_required
 @require_POST
 def ajax_add_lead(request):
+    # ── FIXED: now saves monthly_bill and solar_kwh_required too ──
     try:
         assigned_id = request.POST.get('assigned_to')
+        monthly_bill = request.POST.get('monthly_bill') or None
+        solar_kwh_required = request.POST.get('solar_kwh_required') or None
+
         lead = Lead.objects.create(
-            name=request.POST.get('name'), email=request.POST.get('email'),
-            phone=request.POST.get('phone'), description=request.POST.get('description', ''),
-            status=request.POST.get('status', 'New'), budget=request.POST.get('budget') or 0,
+            name=request.POST.get('name'),
+            email=request.POST.get('email'),
+            phone=request.POST.get('phone'),
+            description=request.POST.get('description', ''),
+            status=request.POST.get('status', 'New'),
+            budget=request.POST.get('budget') or 0,
+            monthly_bill=monthly_bill,
+            solar_kwh_required=solar_kwh_required,
             assigned_to=User.objects.filter(id=assigned_id).first() if assigned_id else None
         )
         return JsonResponse({'success': True, 'lead': {
             'id': lead.id, 'name': lead.name, 'email': lead.email,
             'phone': lead.phone, 'status': lead.status,
             'budget': str(lead.budget), 'date': lead.created_at.strftime('%d %b %Y'),
+            'monthly_bill': str(lead.monthly_bill or ''),
+            'solar_kwh_required': str(lead.solar_kwh_required or ''),
         }})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})

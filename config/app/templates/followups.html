@@ -10,7 +10,7 @@
         * { box-sizing: border-box; }
         body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
         .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease; z-index: 1000; }
-        .sidebar.collapsed { width: 68px; } .sidebar.collapsed .menu-label { display: none; } .sidebar.collapsed .brand-text { display: none; } .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
+        .sidebar.collapsed { width: 68px; } .sidebar.collapsed .menu-label, .sidebar.collapsed .brand-text { display: none; } .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
         .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; } .brand span { color: #f59e0b; }
         .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
         .menu a i { flex-shrink: 0; width: 20px; text-align: center; } .menu a.active, .menu a:hover { background: #2563eb; color: white; }
@@ -24,11 +24,12 @@
         .add-btn { background: #2563eb; color: white; border: none; padding: 11px 20px; border-radius: 9px; text-decoration: none; font-size: 14px; }
         .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 22px; }
         .footer { text-align: center; padding: 24px; color: #64748b; border-top: 1px solid #e5e7eb; background: white; margin-top: 26px; }
-
-        /* Status dropdown for follow ups */
         .status-select { border: none; border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; }
         .status-pending { background: #fef9c3; color: #854d0e; }
         .status-done { background: #dcfce7; color: #15803d; }
+        /* Assigned person mini badge */
+        .assigned-badge { display: inline-flex; align-items: center; gap: 5px; background: #eff6ff; color: #1d4ed8; border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+        .assigned-badge i { font-size: 10px; }
     </style>
 </head>
 <body>
@@ -37,16 +38,15 @@
     <div class="menu">
         <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label">Dashboard</span></a>
         <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
-        <a href="/tasks/"><i class="fa-solid fa-list-check"></i><span class="menu-label">Tasks</span></a>
         <a href="/followups/" class="active"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
-       <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
-<a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
-<a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
-{% if request.user.is_superuser %}
-<a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
-<a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
-<a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
-{% endif %}
+        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+        <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
+        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
+        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
+        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
+        {% endif %}
         <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
     </div>
 </div>
@@ -76,7 +76,17 @@
             <div class="table-responsive">
                 <table id="dataTable" class="table table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr><th>#</th><th>Title</th><th>Lead</th><th>Date</th><th>Time</th><th>Notes</th><th>Status</th><th>Actions</th></tr>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Lead</th>
+                            <th>Assigned To</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Notes</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
                         {% for f in followups %}
@@ -84,25 +94,35 @@
                             <td class="text-muted">{{ forloop.counter }}</td>
                             <td><strong>{{ f.title }}</strong></td>
                             <td>{{ f.lead.name }}</td>
+                            <td>
+                                <!-- Shows the employee assigned to this lead -->
+                                {% if f.lead.assigned_to %}
+                                <span class="assigned-badge">
+                                    <i class="fa-solid fa-user-tie"></i>
+                                    {{ f.lead.assigned_to.username }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted" style="font-size:12px;">Unassigned</span>
+                                {% endif %}
+                            </td>
                             <td>{{ f.follow_up_date }}</td>
                             <td>{{ f.follow_up_time|default:"—" }}</td>
-                            <td>{{ f.notes|truncatechars:40|default:"—" }}</td>
+                            <td>{{ f.notes|truncatechars:35|default:"—" }}</td>
                             <td>
-                                <!-- Status dropdown — clickable for everyone -->
-                               <select 
-    class="status-select {% if f.done %}status-done{% else %}status-pending{% endif %}"
-    data-followup-id="{{ f.id }}"
-    onchange="changeFollowUpStatus(this.dataset.followupId, this)">
+                                <select
+                                    class="status-select {% if f.done %}status-done{% else %}status-pending{% endif %}"
+                                    data-followup-id="{{ f.id }}"
+                                    onchange="changeFollowUpStatus(this.dataset.followupId, this)">
                                     <option value="pending" {% if not f.done %}selected{% endif %}>⏳ Pending</option>
                                     <option value="done" {% if f.done %}selected{% endif %}>✅ Done</option>
                                 </select>
                             </td>
                             <td>
                                 <a href="/followups/{{ f.id }}/edit/" class="btn btn-sm btn-outline-warning">Edit</a>
+                                <a href="/followups/{{ f.id }}/view/" class="btn btn-sm btn-outline-primary">View</a>
                                 {% if request.user.is_superuser %}
                                 <a href="/followups/{{ f.id }}/delete/" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')">Delete</a>
                                 {% endif %}
-                                <a href="/followups/{{ f.id }}/view/" class="btn btn-sm btn-outline-primary">View</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -120,6 +140,7 @@
     </div>
     <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
 </div>
+
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -129,14 +150,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-<script>
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');document.getElementById('main').classList.toggle('expanded');}
 
-// Status change for follow ups — calls toggle URL
+<script>
+function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+}
+
 function changeFollowUpStatus(id, select) {
     const val = select.value;
     select.className = 'status-select ' + (val === 'done' ? 'status-done' : 'status-pending');
-    // Toggle the done status via existing toggle URL
     fetch(`/followups/${id}/toggle/`, {
         method: 'POST',
         headers: { 'X-CSRFToken': '{{ csrf_token }}' }
@@ -144,19 +167,27 @@ function changeFollowUpStatus(id, select) {
     .then(r => r.json())
     .then(data => {
         if (!data.success) {
-            // revert on failure
             select.value = val === 'done' ? 'pending' : 'done';
             select.className = 'status-select ' + (select.value === 'done' ? 'status-done' : 'status-pending');
         }
     })
     .catch(() => {
-        // If no AJAX endpoint, just reload to apply
         location.href = `/followups/${id}/toggle/`;
     });
 }
 
 $(document).ready(function() {
-    $('#dataTable').DataTable({ dom: 'Bfrtip', buttons: ['csv', 'excel', 'print'], pageLength: 10, language: { search: "🔍 Search:", lengthMenu: "Show _MENU_ entries", info: "Showing _START_ to _END_ of _TOTAL_ entries", paginate: { first: "First", last: "Last", next: "Next →", previous: "← Prev" } } });
+    $('#dataTable').DataTable({
+        dom: 'Bfrtip',
+        buttons: ['csv', 'excel', 'print'],
+        pageLength: 10,
+        language: {
+            search: "🔍 Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            paginate: { first: "First", last: "Last", next: "Next →", previous: "← Prev" }
+        }
+    });
 });
 </script>
 </body>
