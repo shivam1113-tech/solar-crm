@@ -7,31 +7,51 @@
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
+
+        /* ── Sidebar (matches all other pages exactly) ── */
         .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0;
             background: linear-gradient(180deg, #071b36, #0b2547); color: white;
-            padding: 22px 14px; overflow-y: auto; }
-        .brand { font-size: 24px; font-weight: 800; margin-bottom: 28px;
-            display: flex; align-items: center; gap: 10px; }
+            padding: 22px 14px; overflow-y: auto; overflow-x: hidden;
+            transition: width 0.3s ease; z-index: 1000; }
+        .sidebar.collapsed { width: 68px; }
+        .sidebar.collapsed .menu-label,
+        .sidebar.collapsed .brand-text { display: none; }
+        .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
+        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px;
+            display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; }
         .brand span { color: #f59e0b; }
-        .menu a { display: flex; align-items: center; gap: 14px; padding: 13px 14px;
-            margin-bottom: 8px; color: #dbeafe; text-decoration: none;
-            border-radius: 10px; font-size: 15px; }
+        .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+            margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px;
+            font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
+        .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
         .menu a.active, .menu a:hover { background: #2563eb; color: white; }
-        .main { margin-left: 245px; min-height: 100vh; }
-        .topbar { height: 72px; background: white; border-bottom: 1px solid #e5e7eb;
-            padding: 0 28px; display: flex; align-items: center; justify-content: space-between; }
+
+        /* ── Main ── */
+        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
+        .main.expanded { margin-left: 68px; }
+
+        /* ── Topbar ── */
+        .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb;
+            padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 999; }
+        .hamburger { cursor: pointer; font-size: 20px; color: #374151;
+            background: none; border: none; padding: 6px 10px; border-radius: 8px; }
+        .hamburger:hover { background: #f1f5f9; }
         .admin-box { display: flex; align-items: center; gap: 12px; }
-        .avatar { width: 42px; height: 42px; border-radius: 50%; background: #e0f2fe;
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb;
             display: flex; align-items: center; justify-content: center;
-            color: #0369a1; font-weight: bold; }
+            color: white; font-weight: bold; font-size: 16px; }
+
+        /* ── Content ── */
         .content { padding: 24px; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
         .page-header h2 { font-weight: 800; margin-bottom: 5px; }
 
-        /* Upload Card */
-        .upload-card { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 32px; max-width: 680px; }
+        /* ── Upload Card ── */
+        .upload-card { background: white; border: 1px solid #e5e7eb; border-radius: 16px;
+            padding: 32px; max-width: 680px; }
 
-        /* Drop Zone */
+        /* ── Drop Zone ── */
         .drop-zone { border: 2px dashed #93c5fd; border-radius: 14px; padding: 48px 24px;
             text-align: center; background: #eff6ff; cursor: pointer; transition: all 0.2s; }
         .drop-zone:hover, .drop-zone.dragover { border-color: #2563eb; background: #dbeafe; }
@@ -40,21 +60,21 @@
         .drop-zone small { color: #64748b; font-size: 13px; }
         .drop-zone input[type="file"] { display: none; }
 
-        /* File type badges */
+        /* ── File type badges ── */
         .file-types { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
         .ftype { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
         .ftype-csv  { background: #dcfce7; color: #15803d; }
         .ftype-xlsx { background: #dbeafe; color: #1d4ed8; }
         .ftype-xml  { background: #ffedd5; color: #c2410c; }
 
-        /* Selected file preview */
+        /* ── File preview ── */
         .file-preview { display: none; align-items: center; gap: 14px; background: #f0fdf4;
             border: 1px solid #86efac; border-radius: 10px; padding: 14px 18px; margin-top: 16px; }
         .file-preview i { color: #16a34a; font-size: 22px; }
         .file-preview span { font-weight: 600; color: #15803d; }
         .file-preview small { color: #64748b; display: block; font-size: 12px; }
 
-        /* Submit button */
+        /* ── Submit button ── */
         .btn-import { background: #2563eb; color: white; border: none;
             padding: 13px 32px; border-radius: 10px; font-size: 15px;
             font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px;
@@ -62,7 +82,13 @@
         .btn-import:hover { background: #1d4ed8; }
         .btn-import:disabled { background: #93c5fd; cursor: not-allowed; }
 
-        /* Info box */
+        /* ── Clear file button: icon only, no cross-arrow cursor ── */
+        .clear-btn { margin-left: auto; background: none; border: none;
+            color: #ef4444; font-size: 18px; cursor: pointer; line-height: 1;
+            padding: 4px 6px; border-radius: 6px; }
+        .clear-btn:hover { background: #fee2e2; }
+
+        /* ── Info box ── */
         .info-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px;
             padding: 18px 20px; margin-top: 24px; }
         .info-box h6 { font-weight: 700; color: #92400e; margin-bottom: 10px; }
@@ -89,40 +115,39 @@
         <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
         <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
         <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
-<a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
-<a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
-{% if request.user.is_superuser %}
-<a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
-<a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
-<a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
-{% endif %}
+         <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
+        <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
+        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
+        <a href="/import/" class="active"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
+        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
+        {% endif %}
         <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
     </div>
 </div>
 
 <div class="main" id="main">
     <div class="topbar">
-        <div class="d-flex align-items-center gap-4">
+        <div class="d-flex align-items-center gap-3">
             <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
             <strong style="font-size:18px;">Import Leads</strong>
         </div>
         <div class="admin-box">
-            <i class="fa-regular fa-bell fs-5"></i>
-            <i class="fa-regular fa-envelope fs-5"></i>
+            <i class="fa-regular fa-bell fs-5 text-muted"></i>
             <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
             <div>
-                <strong>{{ request.user.username }}</strong><br>
+                <strong style="font-size:14px;">{{ request.user.username }}</strong><br>
                 <small class="text-muted">Admin</small>
             </div>
         </div>
     </div>
 
     <div class="content">
-
         <div class="page-header">
             <div>
                 <h2>Import Leads</h2>
-                <p class="text-muted mb-0">Upload a CSV, Excel, or XML file to bulk import leads</p>
+                <p class="text-muted mb-0">Upload a CSV or Excel file to bulk import leads</p>
             </div>
             <a href="/leads/" style="background:white;color:#374151;border:1px solid #dbe3ef;
                 padding:11px 20px;border-radius:9px;text-decoration:none;font-weight:600;">
@@ -131,12 +156,12 @@
         </div>
 
         {% if messages %}
-            {% for msg in messages %}
-            <div class="alert alert-{{ msg.tags|default:'success' }} alert-dismissible fade show" role="alert">
-                {{ msg }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endfor %}
+        {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags|default:'success' }} alert-dismissible fade show" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
         {% endif %}
 
         <div class="upload-card">
@@ -145,7 +170,6 @@
             <form method="POST" enctype="multipart/form-data" id="importForm">
                 {% csrf_token %}
 
-                <!-- Drop Zone -->
                 <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
                     <i class="fa-solid fa-cloud-arrow-up"></i>
                     <p><strong>Click to upload</strong> or drag and drop your file here</p>
@@ -153,20 +177,18 @@
                     <div class="file-types">
                         <span class="ftype ftype-csv"><i class="fa-solid fa-file-csv"></i> CSV</span>
                         <span class="ftype ftype-xlsx"><i class="fa-solid fa-file-excel"></i> Excel (.xlsx)</span>
-                        <span class="ftype ftype-xml"><i class="fa-solid fa-file-code"></i> XML</span>
                     </div>
-                    <input type="file" id="fileInput" name="file" accept=".csv,.xlsx,.xls,.xml">
+                    <input type="file" id="fileInput" name="file" accept=".csv,.xlsx,.xls">
                 </div>
 
-                <!-- File Preview -->
+                <!-- FIX: replaced inline style button with .clear-btn class so cursor is pointer not crosshair -->
                 <div class="file-preview" id="filePreview">
                     <i class="fa-solid fa-file-circle-check"></i>
                     <div>
                         <span id="fileName">filename.csv</span>
                         <small id="fileSize">0 KB</small>
                     </div>
-                    <button type="button" onclick="clearFile()"
-                        style="margin-left:auto;background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;">
+                    <button type="button" class="clear-btn" onclick="clearFile()">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -176,18 +198,13 @@
                 </button>
             </form>
 
-            <!-- Format Guide -->
             <div class="info-box">
                 <h6><i class="fa-solid fa-circle-info"></i> Required Column Names</h6>
                 <p style="font-size:13px;color:#92400e;margin-bottom:10px;">
                     Your file must have these column headers (case-insensitive):
                 </p>
                 <table>
-                    <tr>
-                        <th>Column</th>
-                        <th>Required</th>
-                        <th>Example</th>
-                    </tr>
+                    <tr><th>Column</th><th>Required</th><th>Example</th></tr>
                     <tr><td><code>name</code></td><td>✅ Yes</td><td>Ramesh Patel</td></tr>
                     <tr><td><code>email</code></td><td>✅ Yes</td><td>ramesh@example.com</td></tr>
                     <tr><td><code>phone</code></td><td>✅ Yes</td><td>9876543210</td></tr>
@@ -195,21 +212,7 @@
                     <tr><td><code>budget</code></td><td>No (default: 0)</td><td>150000</td></tr>
                     <tr><td><code>description</code></td><td>No</td><td>Interested in 5kW system</td></tr>
                 </table>
-
-                <div style="margin-top:14px;font-size:13px;color:#92400e;">
-                    <strong>XML format example:</strong>
-                    <pre style="background:#fef3c7;padding:10px;border-radius:8px;font-size:12px;margin-top:6px;">&lt;leads&gt;
-  &lt;lead&gt;
-    &lt;name&gt;Ramesh Patel&lt;/name&gt;
-    &lt;email&gt;ramesh@example.com&lt;/email&gt;
-    &lt;phone&gt;9876543210&lt;/phone&gt;
-    &lt;status&gt;New&lt;/status&gt;
-    &lt;budget&gt;150000&lt;/budget&gt;
-  &lt;/lead&gt;
-&lt;/leads&gt;</pre>
-                </div>
             </div>
-
         </div>
     </div>
 
@@ -218,40 +221,40 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const filePreview = document.getElementById('filePreview');
-    const submitBtn = document.getElementById('submitBtn');
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+}
 
-    fileInput.addEventListener('change', () => showPreview(fileInput.files[0]));
+const dropZone  = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const filePreview = document.getElementById('filePreview');
+const submitBtn = document.getElementById('submitBtn');
 
-    // Drag & Drop
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file) {
-            fileInput.files = e.dataTransfer.files;
-            showPreview(file);
-        }
-    });
+fileInput.addEventListener('change', () => showPreview(fileInput.files[0]));
 
-    function showPreview(file) {
-        if (!file) return;
-        document.getElementById('fileName').textContent = file.name;
-        document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
-        filePreview.style.display = 'flex';
-        submitBtn.disabled = false;
-    }
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) { fileInput.files = e.dataTransfer.files; showPreview(file); }
+});
 
-    function clearFile() {
-        fileInput.value = '';
-        filePreview.style.display = 'none';
-        submitBtn.disabled = true;
-    }
+function showPreview(file) {
+    if (!file) return;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+    filePreview.style.display = 'flex';
+    submitBtn.disabled = false;
+}
+
+function clearFile() {
+    fileInput.value = '';
+    filePreview.style.display = 'none';
+    submitBtn.disabled = true;
+}
 </script>
-<script>function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');document.getElementById('main').classList.toggle('expanded');}</script>
 </body>
 </html>

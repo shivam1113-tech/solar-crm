@@ -9,28 +9,60 @@
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
-        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease; z-index: 1000; }
-        .sidebar.collapsed { width: 68px; } .sidebar.collapsed .menu-label, .sidebar.collapsed .brand-text { display: none; } .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
-        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; } .brand span { color: #f59e0b; }
-        .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
-        .menu a i { flex-shrink: 0; width: 20px; text-align: center; } .menu a.active, .menu a:hover { background: #2563eb; color: white; }
-        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; } .main.expanded { margin-left: 68px; }
-        .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999; }
-        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; } .hamburger:hover { background: #f1f5f9; }
+
+        /* ── Sidebar ── */
+        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0;
+            background: linear-gradient(180deg, #071b36, #0b2547); color: white;
+            padding: 22px 14px; overflow-y: auto; overflow-x: hidden;
+            transition: width 0.3s ease; z-index: 1000; }
+        .sidebar.collapsed { width: 68px; }
+        .sidebar.collapsed .menu-label,
+        .sidebar.collapsed .brand-text { display: none; }
+        .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
+        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px;
+            display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; }
+        .brand span { color: #f59e0b; }
+        .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+            margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px;
+            font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
+        .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
+        .menu a.active, .menu a:hover { background: #2563eb; color: white; }
+
+        /* ── Main ── */
+        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
+        .main.expanded { margin-left: 68px; }
+
+        /* ── Topbar ── */
+        .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb;
+            padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 999; }
+        .hamburger { cursor: pointer; font-size: 20px; color: #374151;
+            background: none; border: none; padding: 6px 10px; border-radius: 8px; }
+        .hamburger:hover { background: #f1f5f9; }
         .admin-box { display: flex; align-items: center; gap: 12px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 16px; }
+
+        /* ── Content ── */
         .content { padding: 24px; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; } .page-header h2 { font-weight: 800; margin-bottom: 5px; }
-        .add-btn { background: #2563eb; color: white; border: none; padding: 11px 20px; border-radius: 9px; text-decoration: none; font-size: 14px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
+        .page-header h2 { font-weight: 800; margin-bottom: 5px; }
+        .add-btn { background: #2563eb; color: white; border: none;
+            padding: 11px 20px; border-radius: 9px; text-decoration: none; font-size: 14px; }
         .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 22px; }
-        .footer { text-align: center; padding: 24px; color: #64748b; border-top: 1px solid #e5e7eb; background: white; margin-top: 26px; }
+        .footer { text-align: center; padding: 24px; color: #64748b;
+            border-top: 1px solid #e5e7eb; background: white; margin-top: 26px; }
 
-        /* Print Bill Modal */
-        .print-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
+        /* ── Print Modal ── */
+        .print-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
         .print-modal.show { display: flex; }
-        .print-modal-content { background: white; border-radius: 16px; width: 680px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .print-modal-content { background: white; border-radius: 16px; width: 680px;
+            max-width: 95vw; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
 
-        /* Professional Invoice Print Styles */
+        /* ── Print styles ── */
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
@@ -38,30 +70,35 @@
             .no-print { display: none !important; }
         }
         .invoice-print { padding: 40px; font-family: Arial, sans-serif; }
-        .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #e5e7eb; }
+        .inv-header { display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #e5e7eb; }
         .inv-company { font-size: 26px; font-weight: 800; color: #071b36; }
         .inv-company span { color: #f59e0b; }
-        .inv-tag { background: #071b36; color: white; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; margin-top: 8px; display: inline-block; }
+        .inv-tag { background: #071b36; color: white; padding: 6px 16px; border-radius: 6px;
+            font-size: 13px; font-weight: 700; margin-top: 8px; display: inline-block; }
         .inv-number { text-align: right; }
         .inv-number h2 { font-size: 28px; font-weight: 900; color: #2563eb; margin: 0; }
         .inv-number p { color: #64748b; font-size: 13px; margin: 4px 0 0; }
         .inv-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 28px; }
-        .inv-party h4 { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .inv-party h4 { font-size: 11px; font-weight: 700; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
         .inv-party p { margin: 3px 0; font-size: 14px; color: #111827; }
         .inv-party strong { font-size: 16px; font-weight: 800; }
         .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
         .inv-table th { background: #071b36; color: white; padding: 12px 16px; font-size: 13px; text-align: left; }
         .inv-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
         .inv-table tr:last-child td { border-bottom: none; }
-        .inv-total { background: #f8fafc; border-radius: 10px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .inv-total { background: #f8fafc; border-radius: 10px; padding: 16px 20px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
         .inv-total-label { font-size: 16px; font-weight: 700; color: #374151; }
         .inv-total-amount { font-size: 28px; font-weight: 900; color: #2563eb; }
-        .inv-status-badge { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; }
-        .inv-footer { text-align: center; padding-top: 24px; border-top: 2px solid #e5e7eb; color: #94a3b8; font-size: 13px; }
+        .inv-footer { text-align: center; padding-top: 24px; border-top: 2px solid #e5e7eb;
+            color: #94a3b8; font-size: 13px; }
         .inv-footer strong { color: #374151; }
     </style>
 </head>
 <body>
+
 <div class="sidebar" id="sidebar">
     <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
     <div class="menu">
@@ -69,6 +106,7 @@
         <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
         <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
         <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+         <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
         <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
         <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
         {% if request.user.is_superuser %}
@@ -89,8 +127,10 @@
         <div class="admin-box">
             <i class="fa-regular fa-bell fs-5 text-muted"></i>
             <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
-            <div><strong style="font-size:14px;">{{ request.user.username }}</strong><br>
-            <small class="text-muted">Admin</small></div>
+            <div>
+                <strong style="font-size:14px;">{{ request.user.username }}</strong><br>
+                <small class="text-muted">Admin</small>
+            </div>
         </div>
     </div>
 
@@ -99,13 +139,22 @@
             <div><h2>Invoices</h2><p class="text-muted mb-0">Track payments and invoices</p></div>
             <a href="/invoices/add/" class="add-btn"><i class="fa-solid fa-plus"></i> Add Invoice</a>
         </div>
-        {% if messages %}{% for msg in messages %}<div class="alert alert-success alert-dismissible fade show">{{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
+
+        {% if messages %}{% for msg in messages %}
+        <div class="alert alert-success alert-dismissible fade show">
+            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}{% endif %}
+
         <div class="panel">
             {% if invoices %}
             <div class="table-responsive">
                 <table id="dataTable" class="table table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr><th>#</th><th>Invoice No</th><th>Customer</th><th>Amount</th><th>Status</th><th>Due Date</th><th>Actions</th></tr>
+                        <tr>
+                            <th>#</th><th>Invoice No</th><th>Customer</th>
+                            <th>Amount</th><th>Status</th><th>Due Date</th><th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
                         {% for inv in invoices %}
@@ -121,28 +170,29 @@
                             </td>
                             <td class="text-muted">{{ inv.due_date|default:"—" }}</td>
                             <td>
-                                <!-- View -->
                                 <a href="/invoices/{{ inv.id }}/view/" class="btn btn-sm btn-outline-primary">
                                     <i class="fa-solid fa-eye"></i> View
                                 </a>
-                                <!-- Print Bill -->
+
+                                
                                 <button class="btn btn-sm btn-outline-success"
-    onclick="printBill(
-        '{{ inv.id }}',
-        'INV-{{ inv.id }}',
-        '{{ inv.customer.name }}',
-        '{{ inv.customer.email }}',
-        '{{ inv.customer.phone }}',
-        "{{ inv.customer.address|default:'-' }}",
-        '{{ inv.amount|floatformat:0 }}',
-        '{{ inv.status }}',
-        '{{ inv.due_date|default:"-" }}',
-        '{{ inv.created_at|date:"d M Y" }}'
-    )">
-    <i class="fa-solid fa-print"></i> Print
-</button>
-                                <!-- Delete -->
-                                <a href="/invoices/{{ inv.id }}/delete/" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this invoice?')">
+                                    data-inv-id="{{ inv.id }}"
+                                    data-inv-no="INV-{{ inv.id }}"
+                                    data-name="{{ inv.customer.name }}"
+                                    data-email="{{ inv.customer.email }}"
+                                    data-phone="{{ inv.customer.phone }}"
+                                    data-address="{{ inv.customer.address|default:'-' }}"
+                                    data-amount="{{ inv.amount|floatformat:0 }}"
+                                    data-status="{{ inv.status }}"
+                                    data-due="{{ inv.due_date|default:'-' }}"
+                                    data-created="{{ inv.created_at|date:'d M Y' }}"
+                                    onclick="printBill(this)">
+                                    <i class="fa-solid fa-print"></i> Print
+                                </button>
+
+                                <a href="/invoices/{{ inv.id }}/delete/"
+                                    class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Delete this invoice?')">
                                     <i class="fa-solid fa-trash"></i> Delete
                                 </a>
                             </td>
@@ -166,7 +216,6 @@
 <!-- Print Bill Modal -->
 <div class="print-modal" id="printModal">
     <div class="print-modal-content">
-        <!-- Modal Header -->
         <div class="no-print" style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #e5e7eb;">
             <strong style="font-size:16px;"><i class="fa-solid fa-print me-2 text-primary"></i>Print Invoice</strong>
             <div style="display:flex;gap:10px;">
@@ -176,17 +225,14 @@
                 <button onclick="closeModal()" class="btn btn-outline-secondary btn-sm">Close</button>
             </div>
         </div>
-        <!-- Invoice Print Area -->
         <div id="printArea">
             <div class="invoice-print">
-                <!-- Invoice Header -->
                 <div class="inv-header">
                     <div>
                         <div class="inv-company">☀️ <span>SOLAR</span> CRM</div>
                         <div class="inv-tag">TAX INVOICE</div>
                         <div style="margin-top:10px;font-size:13px;color:#64748b;">
-                            Solar Energy Solutions<br>
-                            India
+                            Solar Energy Solutions<br>India
                         </div>
                     </div>
                     <div class="inv-number">
@@ -196,8 +242,6 @@
                         <div id="pi-status-badge" style="margin-top:8px;"></div>
                     </div>
                 </div>
-
-                <!-- Bill To -->
                 <div class="inv-parties">
                     <div class="inv-party">
                         <h4>Bill To</h4>
@@ -213,8 +257,6 @@
                         <p>Payment Due: <strong id="pi-due2">-</strong></p>
                     </div>
                 </div>
-
-                <!-- Items Table -->
                 <table class="inv-table">
                     <thead>
                         <tr>
@@ -226,13 +268,11 @@
                     <tbody>
                         <tr>
                             <td>1</td>
-                            <td>Solar Installation & Services</td>
+                            <td>Solar Installation &amp; Services</td>
                             <td style="text-align:right;font-weight:700;" id="pi-amount-row">₹0</td>
                         </tr>
                     </tbody>
                 </table>
-
-                <!-- Total -->
                 <div class="inv-total">
                     <div>
                         <div class="inv-total-label">Total Amount</div>
@@ -240,8 +280,6 @@
                     </div>
                     <div class="inv-total-amount" id="pi-total">₹0</div>
                 </div>
-
-                <!-- Footer -->
                 <div class="inv-footer">
                     <p><strong>Thank you for your business!</strong></p>
                     <p>For queries, contact us at Solar CRM · India</p>
@@ -263,39 +301,50 @@
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
 <script>
-function toggleSidebar(){
+function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('collapsed');
     document.getElementById('main').classList.toggle('expanded');
 }
 
 $(document).ready(function() {
     $('#dataTable').DataTable({
-        dom: 'Bfrtip', buttons: ['csv', 'excel', 'print'], pageLength: 10,
-        language: { search: "🔍 Search:", lengthMenu: "Show _MENU_ entries", info: "Showing _START_ to _END_ of _TOTAL_ entries", paginate: { first: "First", last: "Last", next: "Next →", previous: "← Prev" } }
+        dom: 'Bfrtip',
+        buttons: ['csv', 'excel', 'print'],
+        pageLength: 10,
+        language: {
+            search: "🔍 Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            paginate: { first: "First", last: "Last", next: "Next →", previous: "← Prev" }
+        }
     });
 });
 
-function printBill(id, invNo, name, email, phone, address, amount, status, dueDate, createdDate) {
-    // Fill in invoice data
-    document.getElementById('pi-number').textContent = invNo;
-    document.getElementById('pi-inv-no').textContent = invNo;
-    document.getElementById('pi-date').textContent = createdDate;
-    document.getElementById('pi-due').textContent = dueDate;
-    document.getElementById('pi-due2').textContent = dueDate;
-    document.getElementById('pi-name').textContent = name;
-    document.getElementById('pi-email').textContent = email;
-    document.getElementById('pi-phone').textContent = phone;
-    document.getElementById('pi-address').textContent = address;
-    document.getElementById('pi-amount-row').textContent = '₹' + parseInt(amount).toLocaleString('en-IN');
-    document.getElementById('pi-total').textContent = '₹' + parseInt(amount).toLocaleString('en-IN');
-    document.getElementById('pi-status-text').textContent = status;
+// FIX: reads safe data-* attributes instead of inline JS string arguments
+function printBill(btn) {
+    const d = btn.dataset;
+    document.getElementById('pi-number').textContent    = d.invNo;
+    document.getElementById('pi-inv-no').textContent   = d.invNo;
+    document.getElementById('pi-date').textContent     = d.created;
+    document.getElementById('pi-due').textContent      = d.due;
+    document.getElementById('pi-due2').textContent     = d.due;
+    document.getElementById('pi-name').textContent     = d.name;
+    document.getElementById('pi-email').textContent    = d.email;
+    document.getElementById('pi-phone').textContent    = d.phone;
+    document.getElementById('pi-address').textContent  = d.address;
 
-    // Status badge color
-    let badgeColor = status === 'Paid' ? '#22c55e' : status === 'Overdue' ? '#ef4444' : '#f59e0b';
-    let badgeText = status === 'Paid' ? '✅ Paid' : status === 'Overdue' ? '❌ Overdue' : '⏳ Unpaid';
-    document.getElementById('pi-status-badge').innerHTML = `<span style="background:${badgeColor};color:white;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;">${badgeText}</span>`;
+    const fmt = n => parseInt(n).toLocaleString('en-IN');
+    document.getElementById('pi-amount-row').textContent = '₹' + fmt(d.amount);
+    document.getElementById('pi-total').textContent      = '₹' + fmt(d.amount);
+    document.getElementById('pi-status-text').textContent = d.status;
 
-    // Show modal
+    const colors = { Paid: '#22c55e', Overdue: '#ef4444' };
+    const labels = { Paid: '✅ Paid', Overdue: '❌ Overdue' };
+    const color  = colors[d.status] || '#f59e0b';
+    const label  = labels[d.status] || '⏳ Unpaid';
+    document.getElementById('pi-status-badge').innerHTML =
+        `<span style="background:${color};color:white;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;">${label}</span>`;
+
     document.getElementById('printModal').classList.add('show');
 }
 
@@ -307,7 +356,6 @@ function triggerPrint() {
     window.print();
 }
 
-// Close modal on outside click
 document.getElementById('printModal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
 });

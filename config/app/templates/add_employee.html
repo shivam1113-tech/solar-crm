@@ -27,7 +27,7 @@
         .content { padding: 24px; }
         .page-header { margin-bottom: 26px; }
         .page-header h2 { font-weight: 800; }
-        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 28px; max-width: 600px; }
+        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 28px; width: 100% }
         label { font-weight: 600; margin-bottom: 4px; display: block; }
         .form-control { border-radius: 10px; padding: 11px 14px; border: 1px solid #dbe3ef; width: 100%; font-size: 15px; }
         .form-control:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
@@ -46,6 +46,7 @@
         <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
         <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
         <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+         <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
 <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
 <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
 {% if request.user.is_superuser %}

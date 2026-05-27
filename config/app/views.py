@@ -8,6 +8,7 @@ from .models import Lead, Customer, Project, Quote, Invoice, FollowUp
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import HttpResponseForbidden
+from .models import Product, ProjectProduct
 import random
 import csv
 
@@ -99,7 +100,6 @@ def add_lead(request):
     employees = User.objects.filter(is_superuser=False, is_active=True)
     if request.method == "POST":
         assigned_id = request.POST.get('assigned_to')
-        # ── FIXED: clean solar fields ──
         monthly_bill = request.POST.get('monthly_bill') or None
         solar_kwh_required = request.POST.get('solar_kwh_required') or None
 
@@ -134,7 +134,6 @@ def edit_lead(request, id):
         lead.description = request.POST.get('description')
         lead.status = request.POST.get('status')
         lead.budget = request.POST.get('budget') or 0
-        # ── FIXED: save solar fields ──
         lead.monthly_bill = request.POST.get('monthly_bill') or None
         lead.solar_kwh_required = request.POST.get('solar_kwh_required') or None
         lead.assigned_to = User.objects.filter(id=assigned_id).first() if assigned_id else None
@@ -185,6 +184,12 @@ def customers(request):
 @login_required
 def view_customer(request, id):
     customer = get_object_or_404(Customer, id=id)
+
+    if not request.user.is_superuser:
+        if customer.lead and customer.lead.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('customers')
+
     return render(request, 'view_customer.html', {'customer': customer})
 
 
@@ -192,32 +197,51 @@ def view_customer(request, id):
 def add_customer(request):
     if not request.user.is_superuser:
         return redirect('dashboard')
+    employees = User.objects.filter(is_superuser=False, is_active=True)
     if request.method == "POST":
+        assigned_id = request.POST.get('assigned_to')
         Customer.objects.create(
             name=request.POST.get('name'),
             email=request.POST.get('email'),
             phone=request.POST.get('phone'),
             address=request.POST.get('address'),
+            assigned_to=User.objects.filter(id=assigned_id).first() if assigned_id else None
         )
         messages.success(request, "Customer added successfully")
         return redirect('customers')
-    return render(request, 'customer_form.html', {'title': 'Add Customer'})
+    return render(request, 'customer_form.html', {'title': 'Add Customer', 'employees': employees})
 
 
 @login_required
 def edit_customer(request, id):
-    if not request.user.is_superuser:
-        return redirect('dashboard')
     customer = get_object_or_404(Customer, id=id)
+
+    if not request.user.is_superuser:
+        if customer.lead and customer.lead.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('customers')
+
+    employees = User.objects.filter(is_superuser=False, is_active=True)
+
     if request.method == "POST":
         customer.name = request.POST.get('name')
         customer.email = request.POST.get('email')
         customer.phone = request.POST.get('phone')
         customer.address = request.POST.get('address')
+
+        if request.user.is_superuser:
+            assigned_id = request.POST.get('assigned_to')
+            customer.assigned_to = User.objects.filter(id=assigned_id).first() if assigned_id else None
+
         customer.save()
         messages.success(request, "Customer updated successfully")
         return redirect('customers')
-    return render(request, 'customer_form.html', {'customer': customer, 'title': 'Edit Customer'})
+
+    return render(request, 'customer_form.html', {
+        'customer': customer,
+        'title': 'Edit Customer',
+        'employees': employees
+    })
 
 
 @login_required
@@ -245,16 +269,27 @@ def projects(request):
 @login_required
 def view_project(request, id):
     project = get_object_or_404(Project, id=id)
+
+    if not request.user.is_superuser:
+        if project.customer.lead.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('projects')
+
     return render(request, 'view_project.html', {'project': project})
 
 
+# FIX 1: Only ONE add_project — duplicate removed, full logic preserved
 @login_required
 def add_project(request):
-    if not request.user.is_superuser:
-        return redirect('dashboard')
-    customers = Customer.objects.all()
+    if request.user.is_superuser:
+        customers = Customer.objects.all()
+    else:
+        customers = Customer.objects.filter(lead__assigned_to=request.user)
+
+    products = Product.objects.all().order_by('name')
+
     if request.method == "POST":
-        Project.objects.create(
+        project = Project.objects.create(
             customer=get_object_or_404(Customer, id=request.POST.get('customer')),
             title=request.POST.get('title'),
             description=request.POST.get('description'),
@@ -262,17 +297,42 @@ def add_project(request):
             start_date=request.POST.get('start_date') or None,
             end_date=request.POST.get('end_date') or None,
         )
+
+        _save_project_products(request, project)
+
+        if project.status == 'In Progress':
+            success, error = _deduct_stock(project)
+            if not success:
+                messages.error(request, error)
+                return redirect('edit_project', id=project.id)
+
         messages.success(request, "Project added successfully")
         return redirect('projects')
-    return render(request, 'project_form.html', {'title': 'Add Project', 'customers': customers})
+
+    return render(request, 'project_form.html', {
+        'title': 'Add Project',
+        'customers': customers,
+        'products': products
+    })
 
 
+# FIX 2: Only ONE edit_project — duplicate removed, return render() added
 @login_required
 def edit_project(request, id):
-    if not request.user.is_superuser:
-        return redirect('dashboard')
     project = get_object_or_404(Project, id=id)
-    customers = Customer.objects.all()
+
+    if not request.user.is_superuser:
+        if project.customer.lead.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('projects')
+
+    if request.user.is_superuser:
+        customers = Customer.objects.all()
+    else:
+        customers = Customer.objects.filter(lead__assigned_to=request.user)
+
+    products = Product.objects.all().order_by('name')
+
     if request.method == "POST":
         project.customer = get_object_or_404(Customer, id=request.POST.get('customer'))
         project.title = request.POST.get('title')
@@ -281,9 +341,26 @@ def edit_project(request, id):
         project.start_date = request.POST.get('start_date') or None
         project.end_date = request.POST.get('end_date') or None
         project.save()
+
+        # Re-save products if posted
+        project.project_products.all().delete()
+        _save_project_products(request, project)
+
+        if project.status == 'In Progress':
+            success, error = _deduct_stock(project)
+            if not success:
+                messages.error(request, error)
+                return redirect('edit_project', id=project.id)
+
         messages.success(request, "Project updated")
         return redirect('projects')
-    return render(request, 'project_form.html', {'project': project, 'title': 'Edit Project', 'customers': customers})
+
+    return render(request, 'project_form.html', {
+        'project': project,
+        'title': 'Edit Project',
+        'customers': customers,
+        'products': products,
+    })
 
 
 @login_required
@@ -310,41 +387,81 @@ def quotes(request):
 @login_required
 def view_quote(request, id):
     quote = get_object_or_404(Quote, id=id)
+
+    if not request.user.is_superuser:
+        if quote.lead.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('quotes')
+
     return render(request, 'view_quote.html', {'quote': quote})
 
 
 @login_required
 def add_quote(request):
-    if not request.user.is_superuser:
-        return redirect('dashboard')
-    leads = Lead.objects.all()
+    if request.user.is_superuser:
+        leads = Lead.objects.all()
+    else:
+        leads = Lead.objects.filter(assigned_to=request.user)
+
     if request.method == "POST":
+        lead = get_object_or_404(Lead, id=request.POST.get('lead'))
+
+        if not request.user.is_superuser and lead.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('quotes')
+
         Quote.objects.create(
-            lead=get_object_or_404(Lead, id=request.POST.get('lead')),
+            lead=lead,
             amount=request.POST.get('amount') or 0,
             status=request.POST.get('status'),
             notes=request.POST.get('notes'),
         )
+
         messages.success(request, "Quote added successfully")
         return redirect('quotes')
-    return render(request, 'quote_form.html', {'title': 'Add Quote', 'leads': leads})
+
+    return render(request, 'quote_form.html', {
+        'title': 'Add Quote',
+        'leads': leads
+    })
 
 
+# FIX 3: edit_quote — was cut off with no return statement; fully completed here
 @login_required
 def edit_quote(request, id):
-    if not request.user.is_superuser:
-        return redirect('dashboard')
     quote = get_object_or_404(Quote, id=id)
-    leads = Lead.objects.all()
+
+    if not request.user.is_superuser:
+        if quote.lead.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('quotes')
+
+    if request.user.is_superuser:
+        leads = Lead.objects.all()
+    else:
+        leads = Lead.objects.filter(assigned_to=request.user)
+
     if request.method == "POST":
-        quote.lead = get_object_or_404(Lead, id=request.POST.get('lead'))
+        lead = get_object_or_404(Lead, id=request.POST.get('lead'))
+
+        if not request.user.is_superuser and lead.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('quotes')
+
+        quote.lead = lead
         quote.amount = request.POST.get('amount') or 0
         quote.status = request.POST.get('status')
         quote.notes = request.POST.get('notes')
         quote.save()
-        messages.success(request, "Quote updated")
-        return redirect('quotes')
-    return render(request, 'quote_form.html', {'quote': quote, 'title': 'Edit Quote', 'leads': leads})
+
+        messages.success(request, "Quote updated successfully")
+        return redirect('view_quote', id=id)
+
+    return render(request, 'quote_form.html', {
+        'quote': quote,
+        'title': 'Edit Quote',
+        'leads': leads,
+    })
 
 
 @login_required
@@ -361,18 +478,23 @@ def delete_quote(request, id):
 
 @login_required
 def invoices(request):
-    if not request.user.is_superuser:
-        messages.error(request, "Access denied")
-        return redirect('dashboard')
-    invoices = Invoice.objects.all().order_by('-created_at')
+    if request.user.is_superuser:
+        invoices = Invoice.objects.all().order_by('-created_at')
+    else:
+        invoices = Invoice.objects.filter(customer__lead__assigned_to=request.user).order_by('-created_at')
+
     return render(request, 'invoices.html', {'invoices': invoices})
 
 
 @login_required
 def view_invoice(request, id):
-    if not request.user.is_superuser:
-        return redirect('dashboard')
     invoice = get_object_or_404(Invoice, id=id)
+
+    if not request.user.is_superuser:
+        if invoice.customer.lead.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('invoices')
+
     return render(request, 'view_invoice.html', {'invoice': invoice})
 
 
@@ -695,7 +817,6 @@ def ajax_delete_lead(request, id):
 @login_required
 @require_POST
 def ajax_add_lead(request):
-    # ── FIXED: now saves monthly_bill and solar_kwh_required too ──
     try:
         assigned_id = request.POST.get('assigned_to')
         monthly_bill = request.POST.get('monthly_bill') or None
@@ -755,3 +876,170 @@ def ajax_live_search(request):
     for c in customers:
         results.append({'id': c.id, 'name': c.name, 'email': c.email, 'status': 'Customer', 'type': 'customer'})
     return JsonResponse({'results': results})
+
+
+# ================= PRODUCTS =================
+
+@login_required
+def products(request):
+    all_products = Product.objects.all().order_by('name')
+
+    return render(request, 'products.html', {
+        'products': all_products,
+        'total_products': all_products.count(),
+        'in_stock': all_products.filter(quantity__gt=0).count(),
+        'low_stock': sum(1 for p in all_products if p.is_low_stock and p.quantity > 0),
+        'out_of_stock': all_products.filter(quantity=0).count(),
+    })
+
+
+# ================= AJAX — PRODUCTS =================
+
+@login_required
+@require_POST
+def ajax_add_product(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+
+    try:
+        name = request.POST.get('name', '').strip()
+        quantity = float(request.POST.get('quantity') or 0)
+        price = float(request.POST.get('price') or 0)
+        low_stock_alert = float(request.POST.get('low_stock_alert') or 5)
+
+        if not name:
+            return JsonResponse({'success': False, 'error': 'Product name is required'})
+        if quantity < 0:
+            return JsonResponse({'success': False, 'error': 'Quantity cannot be negative'})
+        if price < 0:
+            return JsonResponse({'success': False, 'error': 'Price cannot be negative'})
+
+        p = Product.objects.create(
+            name=name,
+            brand=request.POST.get('brand', '').strip(),
+            hsn_code=request.POST.get('hsn_code', '').strip(),
+            unit=request.POST.get('unit', 'pcs'),
+            quantity=quantity,
+            price=price,
+            low_stock_alert=low_stock_alert,
+        )
+
+        return JsonResponse({'success': True, 'product': {'id': p.id, 'name': p.name}})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def ajax_edit_product(request, id):
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+
+    p = get_object_or_404(Product, id=id)
+
+    try:
+        name = request.POST.get('name', p.name).strip()
+        price = float(request.POST.get('price') or p.price)
+        low_stock_alert = float(request.POST.get('low_stock_alert') or p.low_stock_alert)
+
+        if not name:
+            return JsonResponse({'success': False, 'error': 'Product name is required'})
+        if price < 0:
+            return JsonResponse({'success': False, 'error': 'Price cannot be negative'})
+
+        p.name = name
+        p.brand = request.POST.get('brand', p.brand).strip()
+        p.hsn_code = request.POST.get('hsn_code', p.hsn_code).strip()
+        p.unit = request.POST.get('unit', p.unit)
+        p.price = price
+        p.low_stock_alert = low_stock_alert
+        p.save()
+
+        return JsonResponse({'success': True})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def ajax_product_stock(request, id):
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+
+    p = get_object_or_404(Product, id=id)
+
+    try:
+        action = request.POST.get('action')
+        qty = float(request.POST.get('quantity') or 0)
+
+        if qty <= 0:
+            return JsonResponse({'success': False, 'error': 'Quantity must be greater than 0'})
+
+        if action == 'add':
+            p.quantity += qty
+        elif action == 'remove':
+            if p.quantity < qty:
+                return JsonResponse({'success': False, 'error': f'Only {p.quantity} {p.unit} in stock'})
+            p.quantity -= qty
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid stock action'})
+
+        p.save()
+        return JsonResponse({'success': True, 'new_quantity': float(p.quantity)})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def ajax_delete_product(request, id):
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+
+    p = get_object_or_404(Product, id=id)
+    p.delete()
+    return JsonResponse({'success': True})
+
+
+# ================= HELPERS =================
+
+def _save_project_products(request, project):
+    product_ids = request.POST.getlist('product_id[]')
+    quantities = request.POST.getlist('product_qty[]')
+
+    for pid, qty in zip(product_ids, quantities):
+        if pid and qty:
+            try:
+                qty = float(qty)
+                if qty <= 0:
+                    continue
+                product = Product.objects.get(id=pid)
+                ProjectProduct.objects.create(
+                    project=project,
+                    product=product,
+                    quantity_used=qty,
+                    deducted=False,
+                )
+            except Exception:
+                continue
+
+
+def _deduct_stock(project):
+    for pp in project.project_products.filter(deducted=False):
+        product = pp.product
+        if pp.quantity_used <= 0:
+            continue
+        if product.quantity < pp.quantity_used:
+            return False, f'Not enough stock for {product.name}. Available: {product.quantity} {product.unit}'
+
+    for pp in project.project_products.filter(deducted=False):
+        product = pp.product
+        product.quantity -= pp.quantity_used
+        product.save()
+        pp.deducted = True
+        pp.save()
+
+    return True, None

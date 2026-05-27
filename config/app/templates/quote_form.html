@@ -28,7 +28,7 @@
         .content { padding: 28px 24px; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
         .page-header h2 { font-weight: 800; margin-bottom: 4px; font-size: 26px; }
-        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 36px; max-width: 720px; box-shadow: 0 4px 24px rgba(37,99,235,0.07); animation: cardSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 36px; width: 100%; box-shadow: 0 4px 24px rgba(37,99,235,0.07); animation: cardSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
         @keyframes cardSlideIn { from { opacity: 0; transform: translateY(32px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .panel .row { animation: fadeUp 0.4s ease both; }
         .panel .row:nth-child(1) { animation-delay: 0.08s; } .panel .row:nth-child(2) { animation-delay: 0.14s; } .panel .row:nth-child(3) { animation-delay: 0.20s; } .panel .row:nth-child(4) { animation-delay: 0.26s; }
@@ -57,6 +57,7 @@
         <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label"> Leads</span></a>
         <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label"> Follow Ups</span></a>
         <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+         <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
 <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
 <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
 {% if request.user.is_superuser %}

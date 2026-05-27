@@ -10,7 +10,7 @@
         * { box-sizing: border-box; }
         body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
         .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease; z-index: 1000; }
-        .sidebar.collapsed { width: 68px; } .sidebar.collapsed .menu-label { display: none; } .sidebar.collapsed .brand-text { display: none; } .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
+        .sidebar.collapsed { width: 68px; } .sidebar.collapsed .menu-label, .sidebar.collapsed .brand-text { display: none; } .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
         .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; } .brand span { color: #f59e0b; }
         .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
         .menu a i { flex-shrink: 0; width: 20px; text-align: center; } .menu a.active, .menu a:hover { background: #2563eb; color: white; }
@@ -24,6 +24,8 @@
         .add-btn { background: #2563eb; color: white; border: none; padding: 11px 20px; border-radius: 9px; text-decoration: none; font-size: 14px; }
         .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 22px; }
         .mini-avatar { width: 34px; height: 34px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+        .assigned-badge { display: inline-flex; align-items: center; gap: 5px; background: #eff6ff; color: #1d4ed8; border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+        .assigned-badge i { font-size: 10px; }
         .footer { text-align: center; padding: 24px; color: #64748b; border-top: 1px solid #e5e7eb; background: white; margin-top: 26px; }
     </style>
 </head>
@@ -35,6 +37,7 @@
         <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
         <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
         <a href="/customers/" class="active"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+         <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
         <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
         <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
         {% if request.user.is_superuser %}
@@ -73,23 +76,47 @@
             <div class="table-responsive">
                 <table id="dataTable" class="table table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Address</th><th>Since</th><th>Actions</th></tr>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                            <th>Assigned To</th>
+                            <th>Since</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
                         {% for c in customers %}
                         <tr>
                             <td class="text-muted">{{ forloop.counter }}</td>
-                            <td><div class="d-flex align-items-center gap-2"><div class="mini-avatar">{{ c.name|slice:":2"|upper }}</div><strong>{{ c.name }}</strong></div></td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="mini-avatar">{{ c.name|slice:":2"|upper }}</div>
+                                    <strong>{{ c.name }}</strong>
+                                </div>
+                            </td>
                             <td>{{ c.email }}</td>
                             <td>{{ c.phone }}</td>
                             <td>{{ c.address|default:"—" }}</td>
+                            <td>
+                                {% if c.lead and c.lead.assigned_to %}
+                                <span class="assigned-badge">
+                                    <i class="fa-solid fa-user-tie"></i>
+                                    {{ c.lead.assigned_to.username }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted" style="font-size:12px;">Unassigned</span>
+                                {% endif %}
+                            </td>
                             <td class="text-muted">{{ c.created_at|date:"d M Y" }}</td>
                             <td>
                                 {% if request.user.is_superuser %}
-                                    <a href="/customers/{{ c.id }}/edit/" class="btn btn-sm btn-outline-warning">Edit</a>
-                                    <a href="/customers/{{ c.id }}/delete/" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')">Delete</a>
+                                <a href="/customers/{{ c.id }}/edit/" class="btn btn-sm btn-outline-warning">Edit</a>
+                                <a href="/customers/{{ c.id }}/delete/" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')">Delete</a>
                                 {% else %}
-                                    <a href="/customers/{{ c.id }}/view/" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="/customers/{{ c.id }}/view/" class="btn btn-sm btn-outline-primary">View</a>
                                 {% endif %}
                             </td>
                         </tr>

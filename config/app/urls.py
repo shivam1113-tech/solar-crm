@@ -29,6 +29,10 @@ urlpatterns = [
     path('customers/<int:id>/edit/', views.edit_customer, name='edit_customer'),
     path('customers/<int:id>/delete/', views.delete_customer, name='delete_customer'),
 
+     # 📦 Products
+    path('products/', views.products, name='products'),
+
+
     # 🏗️ Projects
     path('projects/', views.projects, name='projects'),
     path('projects/add/', views.add_project, name='add_project'),
@@ -68,6 +72,7 @@ urlpatterns = [
     path('verify-reset-otp/', views.verify_reset_otp, name='verify_reset_otp'),
     path('reset-password/', views.reset_password, name='reset_password'),
 
+
     # ================= AJAX =================
     path('ajax/dashboard-stats/', views.ajax_dashboard_stats, name='ajax_dashboard_stats'),
     path('ajax/lead/<int:id>/status/', views.ajax_change_lead_status, name='ajax_change_lead_status'),
@@ -75,4 +80,8 @@ urlpatterns = [
     path('ajax/lead/add/', views.ajax_add_lead, name='ajax_add_lead'),
     path('ajax/notifications/', views.ajax_notifications, name='ajax_notifications'),
     path('ajax/search/', views.ajax_live_search, name='ajax_live_search'),
+    path('ajax/product/add/', views.ajax_add_product, name='ajax_add_product'),
+    path('ajax/product/<int:id>/edit/', views.ajax_edit_product, name='ajax_edit_product'),
+    path('ajax/product/<int:id>/stock/', views.ajax_product_stock, name='ajax_product_stock'),
+    path('ajax/product/<int:id>/delete/', views.ajax_delete_product, name='ajax_delete_product'),
 ]
