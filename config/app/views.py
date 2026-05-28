@@ -9,6 +9,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.http import HttpResponseForbidden
 from .models import Product, ProjectProduct
+from .models import SiteSurvey
 import random
 import csv
 
@@ -971,8 +972,10 @@ def ajax_product_stock(request, id):
     p = get_object_or_404(Product, id=id)
 
     try:
+        from decimal import Decimal
+
         action = request.POST.get('action')
-        qty = float(request.POST.get('quantity') or 0)
+        qty = Decimal(request.POST.get('quantity') or 0)  # ← Decimal not float
 
         if qty <= 0:
             return JsonResponse({'success': False, 'error': 'Quantity must be greater than 0'})
@@ -1043,3 +1046,208 @@ def _deduct_stock(project):
         pp.save()
 
     return True, None
+
+
+# ================= SITE SURVEYS =================
+ 
+@login_required
+def site_surveys(request):
+    if request.user.is_superuser:
+        surveys = SiteSurvey.objects.all().order_by('-created_at')
+    else:
+        surveys = SiteSurvey.objects.filter(assigned_to=request.user).order_by('-created_at')
+ 
+    # Summary counts
+    total      = surveys.count()
+    scheduled  = surveys.filter(status='Scheduled').count()
+    inprogress = surveys.filter(status='In Progress').count()
+    completed  = surveys.filter(status='Completed').count()
+    cancelled  = surveys.filter(status='Cancelled').count()
+ 
+    return render(request, 'site_surveys.html', {
+        'surveys':    surveys,
+        'total':      total,
+        'scheduled':  scheduled,
+        'inprogress': inprogress,
+        'completed':  completed,
+        'cancelled':  cancelled,
+    })
+ 
+ 
+@login_required
+def view_site_survey(request, id):
+    survey = get_object_or_404(SiteSurvey, id=id)
+ 
+    if not request.user.is_superuser and survey.assigned_to != request.user:
+        messages.error(request, "Access denied")
+        return redirect('site_surveys')
+ 
+    return render(request, 'view_site_survey.html', {'survey': survey})
+ 
+ 
+@login_required
+def add_site_survey(request):
+    if request.user.is_superuser:
+        customers = Customer.objects.all()
+        employees = User.objects.filter(is_superuser=False, is_active=True)
+    else:
+        customers = Customer.objects.filter(lead__assigned_to=request.user)
+        employees = []
+ 
+    if request.method == "POST":
+        assigned_id = request.POST.get('assigned_to')
+ 
+        survey = SiteSurvey.objects.create(
+            customer       = get_object_or_404(Customer, id=request.POST.get('customer')),
+            assigned_to    = User.objects.filter(id=assigned_id).first() if assigned_id else request.user,
+            survey_date    = request.POST.get('survey_date'),
+            survey_time    = request.POST.get('survey_time') or None,
+            status         = request.POST.get('status', 'Scheduled'),
+            site_address   = request.POST.get('site_address', ''),
+            maps_link      = request.POST.get('maps_link') or None,
+ 
+            property_type  = request.POST.get('property_type', 'Residential'),
+            roof_type      = request.POST.get('roof_type', 'RCC'),
+            roof_age       = request.POST.get('roof_age') or None,
+            roof_condition = request.POST.get('roof_condition', 'Good'),
+            shading        = request.POST.get('shading', 'None'),
+            roof_area      = request.POST.get('roof_area') or None,
+ 
+            recommended_kw     = request.POST.get('recommended_kw') or None,
+            estimated_units    = request.POST.get('estimated_units') or None,
+            panel_orientation  = request.POST.get('panel_orientation', 'South'),
+            shadow_free_hours  = request.POST.get('shadow_free_hours') or None,
+            net_metering       = request.POST.get('net_metering') == 'on',
+            discom_name        = request.POST.get('discom_name') or None,
+            sanctioned_load    = request.POST.get('sanctioned_load') or None,
+ 
+            monthly_bill      = request.POST.get('monthly_bill') or None,
+            existing_solar    = request.POST.get('existing_solar') == 'on',
+            existing_inverter = request.POST.get('existing_inverter') or None,
+            existing_panels   = request.POST.get('existing_panels') or None,
+ 
+            observations           = request.POST.get('observations') or None,
+            special_requirements   = request.POST.get('special_requirements') or None,
+            estimated_install_days = request.POST.get('estimated_install_days') or None,
+            recommendation         = request.POST.get('recommendation', 'Feasible'),
+        )
+ 
+        # Handle photo uploads
+        if request.FILES.get('photo_roof'):
+            survey.photo_roof = request.FILES['photo_roof']
+        if request.FILES.get('photo_meter'):
+            survey.photo_meter = request.FILES['photo_meter']
+        if request.FILES.get('photo_surroundings'):
+            survey.photo_surroundings = request.FILES['photo_surroundings']
+        survey.save()
+ 
+        messages.success(request, "Site survey added successfully")
+        return redirect('site_surveys')
+ 
+    return render(request, 'site_survey_form.html', {
+        'title':     'Add Site Survey',
+        'customers': customers,
+        'employees': employees,
+    })
+ 
+ 
+@login_required
+def edit_site_survey(request, id):
+    survey = get_object_or_404(SiteSurvey, id=id)
+ 
+    if not request.user.is_superuser and survey.assigned_to != request.user:
+        messages.error(request, "Access denied")
+        return redirect('site_surveys')
+ 
+    if request.user.is_superuser:
+        customers = Customer.objects.all()
+        employees = User.objects.filter(is_superuser=False, is_active=True)
+    else:
+        customers = Customer.objects.filter(lead__assigned_to=request.user)
+        employees = []
+ 
+    if request.method == "POST":
+        assigned_id = request.POST.get('assigned_to')
+ 
+        survey.customer       = get_object_or_404(Customer, id=request.POST.get('customer'))
+        survey.assigned_to    = User.objects.filter(id=assigned_id).first() if assigned_id else survey.assigned_to
+        survey.survey_date    = request.POST.get('survey_date')
+        survey.survey_time    = request.POST.get('survey_time') or None
+        survey.status         = request.POST.get('status', survey.status)
+        survey.site_address   = request.POST.get('site_address', '')
+        survey.maps_link      = request.POST.get('maps_link') or None
+ 
+        survey.property_type  = request.POST.get('property_type', survey.property_type)
+        survey.roof_type      = request.POST.get('roof_type', survey.roof_type)
+        survey.roof_age       = request.POST.get('roof_age') or None
+        survey.roof_condition = request.POST.get('roof_condition', survey.roof_condition)
+        survey.shading        = request.POST.get('shading', survey.shading)
+        survey.roof_area      = request.POST.get('roof_area') or None
+ 
+        survey.recommended_kw     = request.POST.get('recommended_kw') or None
+        survey.estimated_units    = request.POST.get('estimated_units') or None
+        survey.panel_orientation  = request.POST.get('panel_orientation', survey.panel_orientation)
+        survey.shadow_free_hours  = request.POST.get('shadow_free_hours') or None
+        survey.net_metering       = request.POST.get('net_metering') == 'on'
+        survey.discom_name        = request.POST.get('discom_name') or None
+        survey.sanctioned_load    = request.POST.get('sanctioned_load') or None
+ 
+        survey.monthly_bill      = request.POST.get('monthly_bill') or None
+        survey.existing_solar    = request.POST.get('existing_solar') == 'on'
+        survey.existing_inverter = request.POST.get('existing_inverter') or None
+        survey.existing_panels   = request.POST.get('existing_panels') or None
+ 
+        survey.observations           = request.POST.get('observations') or None
+        survey.special_requirements   = request.POST.get('special_requirements') or None
+        survey.estimated_install_days = request.POST.get('estimated_install_days') or None
+        survey.recommendation         = request.POST.get('recommendation', survey.recommendation)
+ 
+        if request.FILES.get('photo_roof'):
+            survey.photo_roof = request.FILES['photo_roof']
+        if request.FILES.get('photo_meter'):
+            survey.photo_meter = request.FILES['photo_meter']
+        if request.FILES.get('photo_surroundings'):
+            survey.photo_surroundings = request.FILES['photo_surroundings']
+ 
+        survey.save()
+        messages.success(request, "Site survey updated successfully")
+        return redirect('view_site_survey', id=id)
+ 
+    return render(request, 'site_survey_form.html', {
+        'survey':    survey,
+        'title':     'Edit Site Survey',
+        'customers': customers,
+        'employees': employees,
+    })
+ 
+ 
+@login_required
+def delete_site_survey(request, id):
+    if not request.user.is_superuser:
+        messages.error(request, "Only admin can delete surveys")
+        return redirect('site_surveys')
+    survey = get_object_or_404(SiteSurvey, id=id)
+    survey.delete()
+    messages.success(request, "Site survey deleted")
+    return redirect('site_surveys')
+ 
+ 
+@login_required
+def ajax_change_survey_status(request, id):
+    from django.views.decorators.http import require_POST
+    from django.http import JsonResponse
+ 
+    survey = get_object_or_404(SiteSurvey, id=id)
+ 
+    if not request.user.is_superuser and survey.assigned_to != request.user:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+ 
+    new_status = request.POST.get('status')
+    valid = ['Scheduled', 'In Progress', 'Completed', 'Cancelled']
+    if new_status not in valid:
+        return JsonResponse({'success': False, 'error': 'Invalid status'})
+ 
+    survey.status = new_status
+    survey.save()
+    return JsonResponse({'success': True, 'status': new_status})
+ 

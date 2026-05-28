@@ -2,12 +2,13 @@
 <html>
 <head>
     <title>Solar CRM Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
-        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease; z-index: 1000; }
+        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease, transform 0.3s ease; z-index: 1100; }
         .sidebar.collapsed { width: 68px; }
         .sidebar.collapsed .menu-label { display: none; }
         .sidebar.collapsed .brand-text { display: none; }
@@ -79,9 +80,149 @@
         .search-result-item:hover { background: #f8fafc; }
         .search-mini-avatar { width: 30px; height: 30px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
         .stat-updating { color: #2563eb !important; }
+
+
+        /* ===== MOBILE RESPONSIVE FIX ONLY ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1050;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 245px !important;
+                transition: transform 0.3s ease;
+                z-index: 1100;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0 !important;
+            }
+
+            .topbar {
+                padding: 0 14px;
+                gap: 10px;
+            }
+
+            .content {
+                padding: 14px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .page-header h2 {
+                font-size: 22px;
+            }
+
+            .stat-card {
+                height: auto;
+                min-height: 86px;
+                padding: 13px;
+            }
+
+            .stat-card h3 {
+                font-size: 18px;
+            }
+
+            .icon-circle {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+
+            .pie-wrap {
+                flex-wrap: wrap;
+                gap: 18px;
+            }
+
+            .pie-container {
+                width: 130px;
+                height: 130px;
+            }
+
+            .quick-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .search-wrapper {
+                max-width: 180px;
+                flex: 1;
+            }
+
+            .search-box {
+                width: 100%;
+                font-size: 13px;
+            }
+
+            .search-results {
+                width: 100%;
+                max-width: 320px;
+            }
+
+            .admin-box strong,
+            .admin-box small,
+            .admin-box .fa-chevron-down {
+                display: none;
+            }
+
+            .notif-dropdown {
+                width: 280px;
+                right: -60px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .search-wrapper {
+                display: none;
+            }
+
+            .topbar {
+                padding: 0 12px;
+            }
+
+            .quick-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .recent-list li,
+            .follow-item {
+                align-items: flex-start;
+                gap: 8px;
+                flex-direction: column;
+            }
+
+            .footer {
+                font-size: 12px;
+                padding: 16px;
+            }
+        }
+
     </style>
 </head>
 <body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
 
 <div class="sidebar" id="sidebar">
     <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
@@ -90,6 +231,7 @@
         <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
         <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
         <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+         <a href="/site-surveys/"><i class="fa-solid fa-map-location-dot"></i><span class="menu-label">Site Surveys</span></a>
          <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
 <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
 <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
@@ -166,26 +308,26 @@
         </div>
 
         <div class="row g-3">
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="stat-card">
                     <div class="icon-circle blue"><i class="fa-solid fa-users"></i></div>
                     <div><p>Total Leads</p><h3 id="stat-total">{{ total_leads }}</h3><span class="growth">↑ All time</span></div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="stat-card">
                     <div class="icon-circle green"><i class="fa-regular fa-user"></i></div>
                     <div><p>New Leads</p><h3 id="stat-new">{{ leads_new }}</h3><span class="growth">↑ Pending</span></div>
                 </div>
             </div>
             {% if request.user.is_superuser %}
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="stat-card">
                     <div class="icon-circle orange"><i class="fa-solid fa-handshake"></i></div>
                     <div><p>Total Deals</p><h3 id="stat-deals">{{ total_deals }}</h3><span class="growth">↑ Accepted quotes</span></div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="stat-card">
                     <div class="icon-circle purple"><i class="fa-solid fa-indian-rupee-sign"></i></div>
                     <div><p>Revenue</p><h3 id="stat-revenue">₹{{ total_revenue|floatformat:0 }}</h3><span class="growth">↑ Paid invoices</span></div>
@@ -195,7 +337,7 @@
         </div>
 
         <div class="row g-3">
-            <div class="col-md-7">
+            <div class="col-12 col-md-7">
                 <div class="panel">
                     <h5>Leads Overview</h5>
                     {% if total_leads > 0 %}
@@ -214,7 +356,7 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="col-md-5">
+            <div class="col-12 col-md-5">
                 <div class="panel">
                     <h5>Quick Actions</h5>
                     <div class="quick-grid">
@@ -234,7 +376,7 @@
         </div>
 
         <div class="row g-3">
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <div class="panel">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h5 class="mb-0">Recent Leads</h5>
@@ -255,7 +397,7 @@
                     </ul>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <div class="panel">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h5 class="mb-0">Upcoming Follow Ups</h5>
@@ -282,8 +424,22 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-    document.getElementById('main').classList.toggle('expanded');
+    const sidebar = document.getElementById('sidebar');
+    const main = document.getElementById('main');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('mobile-open');
+        overlay.classList.toggle('show');
+    } else {
+        sidebar.classList.toggle('collapsed');
+        main.classList.toggle('expanded');
+    }
+}
+
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
 }
 const leadsNew = Number("{{ leads_new|default:0 }}");
 const leadsContacted = Number("{{ leads_contacted|default:0 }}");
@@ -341,7 +497,7 @@ function refreshStats() {
         function animateNum(el, newVal) { if (!el) return; el.classList.add('stat-updating'); el.textContent = newVal; setTimeout(() => el.classList.remove('stat-updating'), 500); }
         animateNum(document.getElementById('stat-total'), data.total_leads);
         animateNum(document.getElementById('stat-new'), data.new_leads);
-        animateNum(document.getElementById('stat-deals'), data.total_deals);~
+        animateNum(document.getElementById('stat-deals'), data.total_deals);
         animateNum(document.getElementById('stat-revenue'), '₹' + Math.round(data.total_revenue));
         const legNew = document.getElementById('leg-new'); const legContacted = document.getElementById('leg-contacted'); const legQualified = document.getElementById('leg-qualified'); const legProposal = document.getElementById('leg-proposal');
         if (legNew) legNew.textContent = data.new_leads; if (legContacted) legContacted.textContent = data.contacted; if (legQualified) legQualified.textContent = data.qualified; if (legProposal) legProposal.textContent = data.proposal;

@@ -72,6 +72,13 @@ urlpatterns = [
     path('verify-reset-otp/', views.verify_reset_otp, name='verify_reset_otp'),
     path('reset-password/', views.reset_password, name='reset_password'),
 
+     # Site Surveys
+    path('site-surveys/', views.site_surveys, name='site_surveys'),
+    path('site-surveys/add/', views.add_site_survey, name='add_site_survey'),
+    path('site-surveys/<int:id>/view/', views.view_site_survey, name='view_site_survey'),
+    path('site-surveys/<int:id>/edit/', views.edit_site_survey, name='edit_site_survey'),
+    path('site-surveys/<int:id>/delete/', views.delete_site_survey, name='delete_site_survey'),
+
 
     # ================= AJAX =================
     path('ajax/dashboard-stats/', views.ajax_dashboard_stats, name='ajax_dashboard_stats'),
@@ -84,4 +91,5 @@ urlpatterns = [
     path('ajax/product/<int:id>/edit/', views.ajax_edit_product, name='ajax_edit_product'),
     path('ajax/product/<int:id>/stock/', views.ajax_product_stock, name='ajax_product_stock'),
     path('ajax/product/<int:id>/delete/', views.ajax_delete_product, name='ajax_delete_product'),
+    path('site-surveys/<int:id>/status/', views.ajax_change_survey_status, name='ajax_survey_status'),
 ]

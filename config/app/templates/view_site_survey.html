@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Survey #{{ survey.id }} - Solar CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
+        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0;
+            background: linear-gradient(180deg, #071b36, #0b2547); color: white;
+            padding: 22px 14px; overflow-y: auto; overflow-x: hidden;
+            transition: width 0.3s ease; z-index: 1000; }
+        .sidebar.collapsed { width: 68px; }
+        .sidebar.collapsed .menu-label, .sidebar.collapsed .brand-text { display: none; }
+        .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
+        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px;
+            display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; }
+        .brand span { color: #f59e0b; }
+        .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+            margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px;
+            font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
+        .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
+        .menu a.active, .menu a:hover { background: #2563eb; color: white; }
+        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
+        .main.expanded { margin-left: 68px; }
+        .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb;
+            padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 999; }
+        .hamburger { cursor: pointer; font-size: 20px; color: #374151;
+            background: none; border: none; padding: 6px 10px; border-radius: 8px; }
+        .hamburger:hover { background: #f1f5f9; }
+        .admin-box { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 16px; }
+        .content { padding: 24px; }
+        .footer { text-align: center; padding: 24px; color: #64748b;
+            border-top: 1px solid #e5e7eb; background: white; margin-top: 26px; }
+        .card { border: 1px solid #e5e7eb; border-radius: 14px; padding: 24px;
+            background: white; margin-bottom: 20px; }
+        .card-title { font-size: 13px; font-weight: 700; color: #9ca3af;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 18px; }
+        .info-row { display: flex; margin-bottom: 14px; gap: 10px; }
+        .info-label { font-size: 13px; color: #64748b; min-width: 180px; font-weight: 600; }
+        .info-value { font-size: 14px; color: #111827; font-weight: 500; }
+        .photo-thumb { width: 100%; max-height: 200px; object-fit: cover;
+            border-radius: 10px; border: 1px solid #e5e7eb; }
+        .hero { background: linear-gradient(135deg, #071b36, #1e40af);
+            color: white; border-radius: 16px; padding: 28px 32px;
+            margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+        .hero h3 { font-size: 22px; font-weight: 800; margin: 0 0 6px; }
+        .hero p { margin: 0; opacity: 0.8; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+    <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
+    <div class="menu">
+        <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label">Dashboard</span></a>
+        <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
+        <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
+        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+        <a href="/site-surveys/" class="active"><i class="fa-solid fa-map-location-dot"></i><span class="menu-label">Site Surveys</span></a>
+          <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
+        <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
+        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
+        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
+        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
+        {% endif %}
+        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
+    </div>
+</div>
+
+<div class="main" id="main">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-3">
+            <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <strong style="font-size:18px;">Survey #{{ survey.id }}</strong>
+        </div>
+        <div class="admin-box">
+            <i class="fa-regular fa-bell fs-5 text-muted"></i>
+            <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
+            <div>
+                <strong style="font-size:14px;">{{ request.user.username }}</strong><br>
+                <small class="text-muted">{% if request.user.is_superuser %}Admin{% else %}Employee{% endif %}</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <!-- Hero -->
+        <div class="hero">
+            <div>
+                <h3>📍 {{ survey.customer.name }}</h3>
+                <p>{{ survey.site_address }}</p>
+                <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <span class="badge bg-{{ survey.status_color }} fs-6">{{ survey.status }}</span>
+                    <span class="badge bg-{{ survey.recommendation_color }} fs-6">{{ survey.recommendation }}</span>
+                    {% if survey.recommended_kw %}
+                    <span class="badge" style="background:#f59e0b;font-size:13px;">⚡ {{ survey.recommended_kw }} kW System</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <a href="/site-surveys/{{ survey.id }}/edit/" class="btn btn-light btn-sm me-2">
+                    <i class="fa-solid fa-pen"></i> Edit
+                </a>
+                <a href="/site-surveys/" class="btn btn-outline-light btn-sm">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- Left Column -->
+            <div class="col-lg-8">
+
+                <!-- Schedule & Assignment -->
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-calendar me-2"></i>Schedule & Assignment</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-row"><span class="info-label">Survey Date</span><span class="info-value">{{ survey.survey_date }}</span></div>
+                            <div class="info-row"><span class="info-label">Survey Time</span><span class="info-value">{{ survey.survey_time|default:"Not set" }}</span></div>
+                            <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge bg-{{ survey.status_color }}">{{ survey.status }}</span></span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row"><span class="info-label">Customer</span><span class="info-value">{{ survey.customer.name }}</span></div>
+                            <div class="info-row"><span class="info-label">Phone</span><span class="info-value">{{ survey.customer.phone|default:"—" }}</span></div>
+                            <div class="info-row"><span class="info-label">Assigned To</span><span class="info-value">{{ survey.assigned_to.username|default:"—" }}</span></div>
+                        </div>
+                    </div>
+                    {% if survey.maps_link %}
+                    <div class="info-row">
+                        <span class="info-label">Maps Link</span>
+                        <span class="info-value">
+                            <a href="{{ survey.maps_link }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fa-solid fa-map-pin"></i> Open in Google Maps
+                            </a>
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Property Details -->
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-house me-2"></i>Property Details</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-row"><span class="info-label">Property Type</span><span class="info-value">{{ survey.property_type }}</span></div>
+                            <div class="info-row"><span class="info-label">Roof Type</span><span class="info-value">{{ survey.roof_type }}</span></div>
+                            <div class="info-row"><span class="info-label">Roof Age</span><span class="info-value">{{ survey.roof_age|default:"—" }} yrs</span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row"><span class="info-label">Roof Condition</span><span class="info-value">{{ survey.roof_condition }}</span></div>
+                            <div class="info-row"><span class="info-label">Shading</span><span class="info-value">{{ survey.shading }}</span></div>
+                            <div class="info-row"><span class="info-label">Available Roof Area</span><span class="info-value">{{ survey.roof_area|default:"—" }} sq.ft.</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solar Feasibility -->
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-sun me-2"></i>Solar Feasibility</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-row"><span class="info-label">Recommended System</span><span class="info-value"><strong>{{ survey.recommended_kw|default:"—" }} kW</strong></span></div>
+                            <div class="info-row"><span class="info-label">Estimated Units/Month</span><span class="info-value">{{ survey.estimated_units|default:"—" }} kWh</span></div>
+                            <div class="info-row"><span class="info-label">Panel Orientation</span><span class="info-value">{{ survey.panel_orientation }}</span></div>
+                            <div class="info-row"><span class="info-label">Shadow-free Hours</span><span class="info-value">{{ survey.shadow_free_hours|default:"—" }} hrs/day</span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row"><span class="info-label">Net Metering</span><span class="info-value">{% if survey.net_metering %}<span class="badge bg-success">Available</span>{% else %}<span class="badge bg-secondary">Not Available</span>{% endif %}</span></div>
+                            <div class="info-row"><span class="info-label">DISCOM / Board</span><span class="info-value">{{ survey.discom_name|default:"—" }}</span></div>
+                            <div class="info-row"><span class="info-label">Sanctioned Load</span><span class="info-value">{{ survey.sanctioned_load|default:"—" }} kW</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing Setup -->
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-plug me-2"></i>Existing Setup</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-row"><span class="info-label">Monthly Bill</span><span class="info-value">{% if survey.monthly_bill %}₹{{ survey.monthly_bill }}{% else %}—{% endif %}</span></div>
+                            <div class="info-row"><span class="info-label">Existing Solar</span><span class="info-value">{% if survey.existing_solar %}<span class="badge bg-warning text-dark">Yes</span>{% else %}No{% endif %}</span></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row"><span class="info-label">Existing Inverter</span><span class="info-value">{{ survey.existing_inverter|default:"—" }}</span></div>
+                            <div class="info-row"><span class="info-label">Existing Panels</span><span class="info-value">{{ survey.existing_panels|default:"—" }}</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Observations -->
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-clipboard me-2"></i>Surveyor Notes & Recommendation</div>
+                    <div class="info-row"><span class="info-label">Recommendation</span><span class="info-value"><span class="badge bg-{{ survey.recommendation_color }} fs-6">{{ survey.recommendation }}</span></span></div>
+                    <div class="info-row"><span class="info-label">Est. Install Days</span><span class="info-value">{{ survey.estimated_install_days|default:"—" }} days</span></div>
+                    {% if survey.observations %}
+                    <div style="margin-bottom:14px;">
+                        <div class="info-label mb-2">Observations</div>
+                        <div style="background:#f8fafc;border-radius:10px;padding:14px;font-size:14px;color:#374151;border:1px solid #e5e7eb;">{{ survey.observations }}</div>
+                    </div>
+                    {% endif %}
+                    {% if survey.special_requirements %}
+                    <div>
+                        <div class="info-label mb-2">Special Requirements</div>
+                        <div style="background:#fffbeb;border-radius:10px;padding:14px;font-size:14px;color:#374151;border:1px solid #fcd34d;">{{ survey.special_requirements }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- Right Column: Photos -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-camera me-2"></i>Site Photos</div>
+                    {% if survey.photo_roof %}
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:6px;">ROOF PHOTO</div>
+                        <a href="{{ survey.photo_roof.url }}" target="_blank">
+                            <img src="{{ survey.photo_roof.url }}" class="photo-thumb" alt="Roof">
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if survey.photo_meter %}
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:6px;">METER BOX</div>
+                        <a href="{{ survey.photo_meter.url }}" target="_blank">
+                            <img src="{{ survey.photo_meter.url }}" class="photo-thumb" alt="Meter">
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if survey.photo_surroundings %}
+                    <div>
+                        <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:6px;">SURROUNDINGS</div>
+                        <a href="{{ survey.photo_surroundings.url }}" target="_blank">
+                            <img src="{{ survey.photo_surroundings.url }}" class="photo-thumb" alt="Surroundings">
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if not survey.photo_roof and not survey.photo_meter and not survey.photo_surroundings %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fa-solid fa-camera fa-2x mb-2"></i><br>No photos uploaded
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-bolt me-2"></i>Quick Actions</div>
+                    <div class="d-grid gap-2">
+                        <a href="/site-surveys/{{ survey.id }}/edit/" class="btn btn-primary">
+                            <i class="fa-solid fa-pen"></i> Edit Survey
+                        </a>
+                        <a href="/customers/{{ survey.customer.id }}/view/" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-user"></i> View Customer
+                        </a>
+                        <a href="/projects/add/" class="btn btn-outline-success">
+                            <i class="fa-solid fa-solar-panel"></i> Create Project
+                        </a>
+                        <a href="/quotes/add/" class="btn btn-outline-primary">
+                            <i class="fa-solid fa-file-invoice"></i> Create Quote
+                        </a>
+                        {% if request.user.is_superuser %}
+                        <a href="/site-surveys/{{ survey.id }}/delete/"
+                            class="btn btn-outline-danger"
+                            onclick="return confirm('Delete this survey?')">
+                            <i class="fa-solid fa-trash"></i> Delete Survey
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Meta -->
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-clock me-2"></i>Timeline</div>
+                    <div class="info-row"><span class="info-label">Created</span><span class="info-value">{{ survey.created_at|date:"d M Y, H:i" }}</span></div>
+                    <div class="info-row"><span class="info-label">Last Updated</span><span class="info-value">{{ survey.updated_at|date:"d M Y, H:i" }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main').classList.toggle('expanded');
+}
+</script>
+</body>
+</html>

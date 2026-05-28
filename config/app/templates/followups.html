@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Follow Ups - Solar CRM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -30,9 +31,75 @@
         /* Assigned person mini badge */
         .assigned-badge { display: inline-flex; align-items: center; gap: 5px; background: #eff6ff; color: #1d4ed8; border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
         .assigned-badge i { font-size: 10px; }
+
+
+        /* ===== MOBILE RESPONSIVE FIX ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1050;
+        }
+        .sidebar-overlay.show { display: block; }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 245px !important;
+                transition: transform 0.3s ease;
+                z-index: 1100;
+            }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main { margin-left: 0 !important; }
+            .topbar { padding: 0 14px; }
+            .content { padding: 14px; }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .page-header h2 { font-size: 22px; }
+            .panel {
+                padding: 16px;
+                width: 100%;
+                max-width: 100%;
+            }
+            .table-responsive { overflow-x: auto; }
+            .admin-box strong,
+            .admin-box small { display: none; }
+            .dt-buttons {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+            .dataTables_filter {
+                margin-top: 10px;
+                text-align: left !important;
+            }
+            .dataTables_filter input {
+                width: 100% !important;
+                margin-left: 0 !important;
+                margin-top: 6px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .add-btn {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+                display: inline-flex;
+            }
+            .btn {
+                margin-bottom: 4px;
+            }
+        }
     </style>
 </head>
 <body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
     <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
     <div class="menu">
@@ -40,6 +107,7 @@
         <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
         <a href="/followups/" class="active"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
         <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
+         <a href="/site-surveys/"><i class="fa-solid fa-map-location-dot"></i><span class="menu-label">Site Surveys</span></a>
          <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
         <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
         <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
@@ -154,8 +222,22 @@
 
 <script>
 function toggleSidebar(){
-    document.getElementById('sidebar').classList.toggle('collapsed');
-    document.getElementById('main').classList.toggle('expanded');
+    const sidebar = document.getElementById('sidebar');
+    const main = document.getElementById('main');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('mobile-open');
+        overlay.classList.toggle('show');
+    } else {
+        sidebar.classList.toggle('collapsed');
+        main.classList.toggle('expanded');
+    }
+}
+
+function closeSidebar(){
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
 }
 
 function changeFollowUpStatus(id, select) {
