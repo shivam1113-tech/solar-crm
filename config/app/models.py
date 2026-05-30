@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 class Lead(models.Model):
@@ -275,3 +276,96 @@ class SiteSurvey(models.Model):
             'Not Feasible': 'danger',
             'Needs Review': 'warning',
         }.get(self.recommendation, 'secondary')    
+    
+    
+# ==========================
+# TICKET OTP MODULE
+# ==========================
+
+class TicketOTP(models.Model):
+    email = models.EmailField()
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    def is_expired(self):
+        from datetime import timedelta
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+
+    def __str__(self):
+        return f"OTP for {self.email}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class Ticket(models.Model):
+    ISSUE_TYPES = [
+        ('installation', 'Installation Issue'),
+        ('billing', 'Billing Query'),
+        ('technical', 'Technical Support'),
+        ('general', 'General Inquiry'),
+        ('other', 'Other'),
+    ]
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('in_progress', 'In Progress'),
+        ('solved', 'Solved'),
+    ]
+
+    ticket_number = models.CharField(max_length=20, unique=True, blank=True)
+    customer_email = models.EmailField()
+    customer_phone = models.CharField(max_length=20, blank=True)
+    customer_name = models.CharField(max_length=200, blank=True)
+    customer = models.ForeignKey(
+        'Customer',                      # ← just 'Customer' since it's the same models.py
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='tickets'
+    )
+    issue_type = models.CharField(max_length=20, choices=ISSUE_TYPES)
+    subject = models.CharField(max_length=300)
+    description = models.TextField()
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
+    photo = models.ImageField(upload_to='tickets/photos/', blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    assigned_employee = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='assigned_tickets'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolution_note = models.TextField(blank=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.ticket_number:
+            self.ticket_number = f"TKT-{self.pk:04d}"
+            Ticket.objects.filter(pk=self.pk).update(ticket_number=self.ticket_number)
+
+    def __str__(self):
+        return f"{self.ticket_number} - {self.subject}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class TicketStats(models.Model):
+    customer = models.OneToOneField(
+        'Customer',                      # ← just 'Customer' since it's the same models.py
+        on_delete=models.CASCADE,
+        related_name='ticket_stats'
+    )
+    total_raised = models.PositiveIntegerField(default=0)
+    total_solved = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Stats for {self.customer}"

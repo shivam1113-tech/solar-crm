@@ -6,10 +6,12 @@ from django.contrib import messages
 from django.utils import timezone
 from .models import Lead, Customer, Project, Quote, Invoice, FollowUp
 from django.core.mail import send_mail
+from django.views.decorators.http import require_POST
 from django.conf import settings
 from django.http import HttpResponseForbidden
 from .models import Product, ProjectProduct
 from .models import SiteSurvey
+from .models import Ticket, TicketOTP, TicketStats, Customer
 import random
 import csv
 
@@ -764,6 +766,280 @@ def reset_password(request):
         except User.DoesNotExist:
             return render(request, 'reset_password.html', {'message': 'User not found'})
     return render(request, 'reset_password.html')
+
+# ── Public: Raise Ticket Page ────────────────────────────────
+def raise_ticket_page(request):
+    return render(request, 'raise_ticket.html')
+
+# ── AJAX: Send OTP ───────────────────────────────────────────
+@require_POST
+@require_POST
+def send_otp(request):
+    email = request.POST.get('email', '').strip().lower()
+
+    if not email:
+        return JsonResponse({'success': False, 'error': 'Email is required.'})
+
+    customer = Customer.objects.filter(email__iexact=email).first()
+
+    if not customer:
+        return JsonResponse({
+            'success': False,
+            'error': 'This email is not registered as a customer. Please contact us directly.'
+        })
+
+    otp = str(random.randint(100000, 999999))
+
+    TicketOTP.objects.filter(email=email, is_used=False).update(is_used=True)
+    TicketOTP.objects.create(email=email, otp=otp)
+
+    try:
+        import ssl
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        msg = MIMEMultipart()
+        msg['From'] = settings.EMAIL_HOST_USER
+        msg['To'] = email
+        msg['Subject'] = 'Your OTP - Solar CRM Support'
+
+        body = f'''Hi {customer.name},
+
+Your OTP to raise a support ticket is: {otp}
+
+This OTP is valid for 10 minutes.
+
+If you did not request this, please ignore this email.
+
+Regards,
+Solar CRM Support Team'''
+
+        msg.attach(MIMEText(body, 'plain'))
+
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+
+        with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+            server.ehlo()
+            server.starttls(context=context)
+            server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+            server.sendmail(settings.EMAIL_HOST_USER, email, msg.as_string())
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Failed to send email: {str(e)}'})
+
+    return JsonResponse({'success': True})
+    # Check if email belongs to a customer
+    customer = Customer.objects.filter(email__iexact=email).first()
+    if not customer:
+        return JsonResponse({
+            'success': False,
+            'error': 'This email is not registered as a customer. Please contact us directly.'
+        })
+ 
+    # Generate OTP
+    otp = str(random.randint(100000, 999999))
+ 
+    # Save OTP (mark old ones as used)
+    TicketOTP.objects.filter(email=email, is_used=False).update(is_used=True)
+    TicketOTP.objects.create(email=email, otp=otp)
+ 
+    # Send OTP email
+    try:
+        send_mail(
+            subject='Your OTP - Solar CRM Support',
+            message=f'''Hi {customer.name},
+ 
+Your OTP to raise a support ticket is: {otp}
+ 
+This OTP is valid for 10 minutes.
+ 
+If you did not request this, please ignore this email.
+ 
+Regards,
+Solar CRM Support Team''',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Failed to send email: {str(e)}'})
+ 
+    return JsonResponse({'success': True})
+ 
+ 
+# ── AJAX: Verify OTP ─────────────────────────────────────────
+@require_POST
+def verify_otp(request):
+    email = request.POST.get('email', '').strip().lower()
+    otp   = request.POST.get('otp', '').strip()
+ 
+    if not email or not otp:
+        return JsonResponse({'success': False, 'error': 'Email and OTP are required.'})
+ 
+    otp_obj = TicketOTP.objects.filter(email=email, otp=otp, is_used=False).order_by('-created_at').first()
+ 
+    if not otp_obj:
+        return JsonResponse({'success': False, 'error': 'Invalid OTP. Please try again.'})
+ 
+    if otp_obj.is_expired():
+        return JsonResponse({'success': False, 'error': 'OTP has expired. Please request a new one.'})
+ 
+    # Mark OTP as used
+    otp_obj.is_used = True
+    otp_obj.save()
+ 
+    # Get customer name
+    customer = Customer.objects.filter(email__iexact=email).first()
+ 
+    return JsonResponse({'success': True, 'customer_name': customer.name if customer else email})
+ 
+ 
+# ── AJAX: Submit Ticket ──────────────────────────────────────
+@require_POST
+def submit_ticket(request):
+    email       = request.POST.get('email', '').strip().lower()
+    issue_type  = request.POST.get('issue_type', '')
+    subject     = request.POST.get('subject', '').strip()
+    description = request.POST.get('description', '').strip()
+    priority    = request.POST.get('priority', 'medium')
+    phone       = request.POST.get('phone', '').strip()
+ 
+    if not all([email, issue_type, subject, description]):
+        return JsonResponse({'success': False, 'error': 'All fields are required.'})
+ 
+    customer = Customer.objects.filter(email__iexact=email).first()
+    if not customer:
+        return JsonResponse({'success': False, 'error': 'Customer not found.'})
+ 
+    # Create ticket
+    ticket = Ticket.objects.create(
+        customer=customer,
+        customer_name=customer.name,
+        customer_email=email,
+        customer_phone=phone or customer.phone,
+        issue_type=issue_type,
+        subject=subject,
+        description=description,
+        priority=priority,
+        status='open',
+    )
+ 
+    # Update ticket stats
+    stats, _ = TicketStats.objects.get_or_create(customer=customer)
+    stats.total_raised += 1
+    stats.save()
+ 
+    # Send confirmation email to customer
+    # Send confirmation email to customer
+    try:
+        import ssl
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        msg = MIMEMultipart()
+        msg['From'] = settings.EMAIL_HOST_USER
+        msg['To'] = email
+        msg['Subject'] = f'Ticket Received: {ticket.ticket_number} - Solar CRM'
+
+        body = f'''Hi {customer.name},
+
+Thank you for reaching out! Your support ticket has been successfully submitted.
+
+Ticket Number : {ticket.ticket_number}
+Subject       : {subject}
+Issue Type    : {ticket.get_issue_type_display()}
+Priority      : {priority.title()}
+Status        : Open
+
+Our team will review your complaint and get back to you as soon as possible.
+
+Regards,
+Solar CRM Support Team'''
+
+        msg.attach(MIMEText(body, 'plain'))
+
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+
+        with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
+            server.ehlo()
+            server.starttls(context=context)
+            server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+            server.sendmail(
+                settings.EMAIL_HOST_USER,
+                email,
+                msg.as_string()
+            )
+
+    except Exception as e:
+        print("Ticket confirmation email failed:", e)
+
+    return JsonResponse({
+        'success': True,
+        'ticket_number': ticket.ticket_number
+    })
+ 
+ 
+# ── Staff: Ticket List ───────────────────────────────────────
+@login_required
+def ticket_list(request):
+    if request.user.is_superuser:
+        tickets = Ticket.objects.all().order_by('-created_at')
+    else:
+        tickets = Ticket.objects.filter(assigned_employee=request.user).order_by('-created_at')
+ 
+    employees = User.objects.filter(is_superuser=False, is_active=True)
+ 
+    return render(request, 'ticket_list.html', {
+        'tickets':        tickets,
+        'employees':      employees,
+        'total':          tickets.count(),
+        'open_count':     tickets.filter(status='open').count(),
+        'inprogress_count': tickets.filter(status='in_progress').count(),
+        'solved_count':   tickets.filter(status='solved').count(),
+    })
+ 
+ 
+# ── AJAX: Update Ticket ──────────────────────────────────────
+@login_required
+@require_POST
+def update_ticket(request, ticket_id):
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+ 
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    ticket.status          = request.POST.get('status', ticket.status)
+    ticket.resolution_note = request.POST.get('note', '')
+ 
+    emp_id = request.POST.get('employee_id')
+    ticket.assigned_employee = User.objects.filter(id=emp_id).first() if emp_id else None
+ 
+    if ticket.status == 'solved' and not ticket.resolved_at:
+        ticket.resolved_at = timezone.now()
+        # Update stats
+        if ticket.customer:
+            stats, _ = TicketStats.objects.get_or_create(customer=ticket.customer)
+            stats.total_solved += 1
+            stats.save()
+ 
+    ticket.save()
+    return JsonResponse({'success': True})
+ 
+ 
+# ── AJAX: Delete Ticket ──────────────────────────────────────
+@login_required
+@require_POST
+def delete_ticket(request, ticket_id):
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    ticket.delete()
+    return JsonResponse({'success': True})
 
 
 # ================= AJAX VIEWS =================

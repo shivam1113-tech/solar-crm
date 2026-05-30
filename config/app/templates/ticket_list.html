@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tickets - Solar CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
+        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease; z-index: 1000; }
+        .sidebar.collapsed { width: 68px; } .sidebar.collapsed .menu-label, .sidebar.collapsed .brand-text { display: none; } .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
+        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; }
+        .brand span { color: #f59e0b; }
+        .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
+        .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
+        .menu a.active, .menu a:hover { background: #2563eb; color: white; }
+        .menu a:hover { transform: translateX(3px); }
+        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
+        .main.expanded { margin-left: 68px; }
+        .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999; }
+        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; transition: background 0.2s, transform 0.15s; }
+        .hamburger:hover { background: #f1f5f9; transform: scale(1.08); }
+        .admin-box { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
+        .content { padding: 28px 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .page-header h2 { font-weight: 800; margin-bottom: 4px; font-size: 26px; }
+
+        /* stat cards */
+        .stat-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+        .stat-card { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .icon-circle { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; flex-shrink: 0; }
+        .blue{background:#2563eb;} .orange{background:#f97316;} .green{background:#22c55e;} .red{background:#ef4444;}
+        .stat-card h4 { font-size: 20px; font-weight: 800; margin: 0; }
+        .stat-card p { margin: 0; color: #64748b; font-size: 12px; }
+
+        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 22px; }
+
+        /* badges */
+        .badge-open       { background:#dbeafe; color:#1d4ed8; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:600; }
+        .badge-in_progress{ background:#fef9c3; color:#92400e; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:600; }
+        .badge-solved     { background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:600; }
+        .pri-low    { background:#dcfce7; color:#15803d; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600; }
+        .pri-medium { background:#fef9c3; color:#92400e; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600; }
+        .pri-high   { background:#fee2e2; color:#b91c1c; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600; }
+
+        /* modal */
+        .modal-content { border-radius: 18px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalPop 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes modalPop { from { opacity:0; transform:scale(0.94) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        .modal-header { background: linear-gradient(135deg,#071b36,#1d4ed8); color:white; border-radius:18px 18px 0 0; padding:18px 24px; }
+        .modal-header .btn-close { filter:invert(1); }
+        .form-control, .form-select { border-radius:10px; border:1px solid #dbe3ef; padding:10px 14px; font-size:14px; background:#f9fafb; transition:border 0.2s, transform 0.15s; }
+        .form-control:focus, .form-select:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.12); background:white; outline:none; }
+        .btn-modal-primary { background:#2563eb; color:white; border:none; padding:11px 24px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:background 0.2s, transform 0.15s, box-shadow 0.2s; }
+        .btn-modal-primary:hover { background:#1d4ed8; transform:translateY(-2px); box-shadow:0 6px 20px rgba(37,99,235,0.28); }
+        .btn-modal-secondary { background:white; color:#374151; border:1px solid #dbe3ef; padding:11px 20px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; transition:background 0.2s, transform 0.15s; }
+        .btn-modal-secondary:hover { background:#f1f5f9; transform:translateY(-1px); }
+
+        .toast-container { position:fixed; top:20px; right:20px; z-index:9999; }
+        .toast-msg { background:white; border-left:4px solid #22c55e; border-radius:10px; padding:14px 18px; margin-bottom:10px; box-shadow:0 4px 20px rgba(0,0,0,0.12); font-size:14px; min-width:280px; display:flex; align-items:center; gap:10px; animation:slideIn 0.3s ease; }
+        .toast-msg.error { border-left-color:#ef4444; }
+        @keyframes slideIn { from{transform:translateX(100%);opacity:0;} to{transform:translateX(0);opacity:1;} }
+        @keyframes slideOut { from{opacity:1;} to{transform:translateX(100%);opacity:0;} }
+
+        .ticket-detail-row { display:flex; gap:8px; margin-bottom:8px; font-size:13px; }
+        .ticket-detail-row .lbl { color:#64748b; min-width:110px; flex-shrink:0; font-weight:600; }
+        .ticket-detail-row .val { color:#111827; }
+
+        .footer { text-align:center; padding:20px; color:#64748b; border-top:1px solid #e5e7eb; background:white; margin-top:24px; font-size:13px; }
+        @media (max-width:768px) { .sidebar{width:68px;} .sidebar .menu-label,.sidebar .brand-text{display:none;} .sidebar .menu a{justify-content:center;padding:13px 0;} .main{margin-left:68px;} .stat-cards{grid-template-columns:repeat(2,1fr);} .content{padding:14px;} .topbar{padding:0 14px;} }
+    </style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="sidebar" id="sidebar">
+    <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
+    <div class="menu">
+        <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label"> Dashboard</span></a>
+        <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label"> Leads</span></a>
+        <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label"> Follow Ups</span></a>
+        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label"> Customers</span></a>
+        <a href="/site-surveys/"><i class="fa-solid fa-map-location-dot"></i><span class="menu-label">Site Surveys</span></a>
+        <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
+        <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label"> Projects</span></a>
+        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label"> Quotes</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label"> Invoices</span></a>
+        {% endif %}
+        <a href="/tickets/" class="active"><i class="fa-solid fa-ticket"></i><span class="menu-label"> Tickets</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label"> Import Leads</span></a>
+        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label"> Employees</span></a>
+        {% endif %}
+        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label"> Logout</span></a>
+    </div>
+</div>
+
+<div class="main" id="main">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-3">
+            <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <strong style="font-size:18px;">Support Tickets</strong>
+        </div>
+        <div class="admin-box">
+            <i class="fa-regular fa-bell fs-5 text-muted"></i>
+            <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
+            <div><strong style="font-size:14px;">{{ request.user.username }}</strong><br>
+            <small class="text-muted">{% if request.user.is_superuser %}Admin{% else %}Employee{% endif %}</small></div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="page-header">
+            <div>
+                <h2>Support Tickets</h2>
+                <p class="text-muted mb-0" style="font-size:13px;">All customer support tickets in one place</p>
+            </div>
+            <a href="/raise-ticket/" target="_blank" style="background:#f0fdf4;color:#15803d;border:1.5px solid #86efac;padding:10px 18px;border-radius:9px;text-decoration:none;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:transform 0.15s,box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 14px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> View Public Form
+            </a>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stat-cards">
+            <div class="stat-card"><div class="icon-circle blue"><i class="fa-solid fa-ticket"></i></div><div><p>Total Tickets</p><h4>{{ total }}</h4></div></div>
+            <div class="stat-card"><div class="icon-circle red"><i class="fa-solid fa-circle-exclamation"></i></div><div><p>Open</p><h4>{{ open_count }}</h4></div></div>
+            <div class="stat-card"><div class="icon-circle orange"><i class="fa-solid fa-spinner"></i></div><div><p>In Progress</p><h4>{{ inprogress_count }}</h4></div></div>
+            <div class="stat-card"><div class="icon-circle green"><i class="fa-solid fa-circle-check"></i></div><div><p>Solved</p><h4>{{ solved_count }}</h4></div></div>
+        </div>
+
+        <div class="panel">
+            {% if tickets %}
+            <div class="table-responsive">
+                <table id="dataTable" class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>Ticket No.</th><th>Customer</th><th>Issue</th><th>Subject</th><th>Priority</th><th>Status</th><th>Date</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for t in tickets %}
+                        <tr id="trow-{{ t.id }}">
+                            <td class="text-muted">{{ forloop.counter }}</td>
+                            <td><strong style="color:#2563eb;">{{ t.ticket_number }}</strong></td>
+                            <td>
+                                <strong style="font-size:13px;">{{ t.customer_name }}</strong><br>
+                                <small class="text-muted">{{ t.customer_email }}</small>
+                            </td>
+                            <td><span style="font-size:12px;color:#64748b;">{{ t.get_issue_type_display }}</span></td>
+                            <td style="max-width:200px;"><span style="font-size:13px;">{{ t.subject|truncatechars:40 }}</span></td>
+                            <td><span class="pri-{{ t.priority }}">{{ t.priority|title }}</span></td>
+                            <td><span class="badge-{{ t.status }}">{{ t.get_status_display }}</span></td>
+                            <td class="text-muted" style="font-size:12px;">{{ t.created_at|date:"d M Y" }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" data-action="view-ticket" data-ticket-id="{{ t.id }}" style="transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">View</button>
+                                {% if request.user.is_superuser %}
+                                <button class="btn btn-sm btn-outline-warning" data-action="update-ticket" data-ticket-id="{{ t.id }}" data-status="{{ t.status }}" data-emp-id="{{ t.assigned_employee_id|default:'' }}" style="transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">Update</button>
+                                <button class="btn btn-sm btn-outline-danger" data-action="delete-ticket" data-ticket-id="{{ t.id }}" data-ticket-num="{{ t.ticket_number|escapejs }}" style="transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">Delete</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fa-solid fa-ticket fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No tickets yet.</p>
+                <a href="/raise-ticket/" target="_blank" class="btn btn-outline-primary btn-sm">View Public Ticket Form</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
+</div>
+
+<!-- View Ticket Modal -->
+<div class="modal fade" id="viewTicketModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-ticket me-2"></i>Ticket Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="viewTicketBody">Loading...</div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Ticket Modal -->
+{% if request.user.is_superuser %}
+<div class="modal fade" id="updateTicketModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-pen me-2"></i>Update Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="u_id">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="fw-semibold mb-1" style="font-size:13px;">Status</label>
+                        <select id="u_status" class="form-select">
+                            <option value="open">🔴 Open</option>
+                            <option value="in_progress">🟡 In Progress</option>
+                            <option value="solved">🟢 Solved</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="fw-semibold mb-1" style="font-size:13px;">Assign To Employee</label>
+                        <select id="u_employee" class="form-select">
+                            <option value="">-- Unassigned --</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.id }}">{{ emp.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="fw-semibold mb-1" style="font-size:13px;">Resolution Note</label>
+                        <textarea id="u_note" class="form-control" rows="3" placeholder="Add a resolution note..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-modal-primary" onclick="submitUpdate()"><i class="fa-solid fa-check"></i> Update Ticket</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Ticket data for view modal -->
+<script id="tickets-data-json" type="application/json">
+{
+    {% for t in tickets %}
+    "{{ t.id }}": {
+        "ticket_number": "{{ t.ticket_number|escapejs }}",
+        "customer_name": "{{ t.customer_name|escapejs }}",
+        "customer_email": "{{ t.customer_email|escapejs }}",
+        "customer_phone": "{{ t.customer_phone|default:'—'|escapejs }}",
+        "issue_type": "{{ t.get_issue_type_display|escapejs }}",
+        "subject": "{{ t.subject|escapejs }}",
+        "description": "{{ t.description|escapejs }}",
+        "priority": "{{ t.priority|escapejs }}",
+        "status": "{{ t.status|escapejs }}",
+        "assigned": "{{ t.assigned_employee.username|default:'Unassigned'|escapejs }}",
+        "resolution_note": "{{ t.resolution_note|default:''|escapejs }}",
+        "created_at": "{{ t.created_at|date:'d M Y, h:i A'|escapejs }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+}
+</script>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+const CSRF = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
+const TICKETS_DATA = JSON.parse(document.getElementById('tickets-data-json')?.textContent || '{}');
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('collapsed'); document.getElementById('main').classList.toggle('expanded'); }
+$(document).ready(function(){ $('#dataTable').DataTable({ pageLength: 15, order: [[7,'desc']] }); });
+
+
+document.addEventListener('click', function(event) {
+    const btn = event.target.closest('[data-action]');
+    if (!btn) return;
+
+    const id = btn.dataset.ticketId;
+
+    if (btn.dataset.action === 'view-ticket') {
+        viewTicket(id);
+    }
+
+    if (btn.dataset.action === 'update-ticket') {
+        openUpdateModal(id, btn.dataset.status, btn.dataset.empId);
+    }
+
+    if (btn.dataset.action === 'delete-ticket') {
+        deleteTicket(id, btn.dataset.ticketNum);
+    }
+});
+
+function showToast(msg, type='success') {
+    const t = document.createElement('div');
+    t.className = 'toast-msg' + (type==='error'?' error':'');
+    const color = type==='success'?'#22c55e':'#ef4444';
+    const icon  = type==='success'?'circle-check':'circle-xmark';
+    t.innerHTML = `<i class="fa-solid fa-${icon}" style="color:${color}"></i> ${msg}`;
+    document.getElementById('toastContainer').appendChild(t);
+    setTimeout(()=>{ t.style.animation='slideOut 0.3s ease forwards'; setTimeout(()=>t.remove(),300); }, 3500);
+}
+
+function viewTicket(id) {
+    const t = TICKETS_DATA[id];
+    const statusColors = { open:'badge-open', in_progress:'badge-in_progress', solved:'badge-solved' };
+    const priColors    = { low:'pri-low', medium:'pri-medium', high:'pri-high' };
+    document.getElementById('viewTicketBody').innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+            <span style="font-size:22px;font-weight:800;color:#2563eb;">${t.ticket_number}</span>
+            <span class="${statusColors[t.status]}">${t.status.replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase())}</span>
+        </div>
+        <div class="ticket-detail-row"><span class="lbl">Customer</span><span class="val"><strong>${t.customer_name}</strong></span></div>
+        <div class="ticket-detail-row"><span class="lbl">Email</span><span class="val">${t.customer_email}</span></div>
+        <div class="ticket-detail-row"><span class="lbl">Phone</span><span class="val">${t.customer_phone}</span></div>
+        <div class="ticket-detail-row"><span class="lbl">Issue Type</span><span class="val">${t.issue_type}</span></div>
+        <div class="ticket-detail-row"><span class="lbl">Priority</span><span class="val"><span class="${priColors[t.priority]}">${t.priority.charAt(0).toUpperCase()+t.priority.slice(1)}</span></span></div>
+        <div class="ticket-detail-row"><span class="lbl">Assigned To</span><span class="val">${t.assigned}</span></div>
+        <div class="ticket-detail-row"><span class="lbl">Raised On</span><span class="val">${t.created_at}</span></div>
+        <hr style="border-color:#f1f5f9;margin:14px 0;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;">Subject</div>
+        <p style="font-size:14px;color:#374151;">${t.subject}</p>
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;">Description</div>
+        <p style="font-size:14px;color:#374151;background:#f8fafc;border-radius:10px;padding:12px 14px;">${t.description}</p>
+        ${t.resolution_note ? `<div style="font-weight:700;font-size:14px;margin-bottom:8px;">Resolution Note</div><p style="font-size:14px;color:#15803d;background:#dcfce7;border-radius:10px;padding:12px 14px;">${t.resolution_note}</p>` : ''}
+    `;
+    new bootstrap.Modal(document.getElementById('viewTicketModal')).show();
+}
+
+function openUpdateModal(id, status, empId) {
+    document.getElementById('u_id').value = id;
+    document.getElementById('u_status').value = status;
+    document.getElementById('u_employee').value = empId || '';
+    document.getElementById('u_note').value = TICKETS_DATA[id]?.resolution_note || '';
+    new bootstrap.Modal(document.getElementById('updateTicketModal')).show();
+}
+
+async function submitUpdate() {
+    const id = document.getElementById('u_id').value;
+    const fd = new FormData();
+    fd.append('status',      document.getElementById('u_status').value);
+    fd.append('employee_id', document.getElementById('u_employee').value);
+    fd.append('note',        document.getElementById('u_note').value);
+    const res = await fetch(`/ajax/ticket/${id}/update/`, { method:'POST', headers:{'X-CSRFToken':CSRF}, body:fd });
+    const data = await res.json();
+    if (data.success) {
+        bootstrap.Modal.getInstance(document.getElementById('updateTicketModal')).hide();
+        showToast('Ticket updated!');
+        setTimeout(() => location.reload(), 1200);
+    } else showToast(data.error || 'Failed', 'error');
+}
+
+async function deleteTicket(id, num) {
+    if (!confirm(`Delete ticket ${num}? This cannot be undone.`)) return;
+    const res = await fetch(`/ajax/ticket/${id}/delete/`, { method:'POST', headers:{'X-CSRFToken':CSRF} });
+    const data = await res.json();
+    if (data.success) { document.getElementById('trow-'+id).remove(); showToast(`Ticket ${num} deleted!`); }
+    else showToast(data.error || 'Failed', 'error');
+}
+</script>
+</body>
+</html>

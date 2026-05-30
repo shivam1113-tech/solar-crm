@@ -193,6 +193,9 @@
         <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label"> Quotes</span></a>
         {% if request.user.is_superuser %}
         <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label"> Invoices</span></a>
+        {% endif %}
+        <a href="/tickets/"><i class="fa-solid fa-ticket"></i><span class="menu-label"> Tickets</span></a>
+        {% if request.user.is_superuser %}
         <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label"> Import Leads</span></a>
         <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label"> Employees</span></a>
         {% endif %}
@@ -333,7 +336,7 @@ function closeSidebar() {
     if (sidebar) sidebar.classList.remove('mobile-open');
     if (overlay) overlay.classList.remove('show');
 }
-document.querySelectorAll('input[type="text"], input[type="email"], textarea').forEach(el => {
+document.querySelectorAll('input[type="text"], textarea').forEach(el => {
     el.addEventListener('input', function() {
         let pos = this.selectionStart;
         this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);

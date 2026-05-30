@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Raise a Ticket - Solar CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: linear-gradient(135deg, #071b36 0%, #0b2547 50%, #1d4ed8 100%); min-height: 100vh; font-family: Arial, sans-serif; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+        .ticket-wrapper { width: 100%; max-width: 520px; }
+
+        /* Header */
+        .ticket-header { text-align: center; margin-bottom: 28px; }
+        .ticket-header .logo { font-size: 28px; font-weight: 800; color: white; margin-bottom: 6px; }
+        .ticket-header .logo span { color: #f59e0b; }
+        .ticket-header p { color: #93c5fd; font-size: 14px; margin: 0; }
+
+        /* Card */
+        .ticket-card { background: white; border-radius: 22px; padding: 36px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); }
+
+        /* Steps indicator */
+        .steps { display: flex; align-items: center; justify-content: center; margin-bottom: 28px; gap: 0; }
+        .step { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; border: 2px solid #e5e7eb; color: #9ca3af; background: white; transition: all 0.3s; }
+        .step-circle.active { background: #2563eb; border-color: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.35); }
+        .step-circle.done { background: #22c55e; border-color: #22c55e; color: white; }
+        .step-label { font-size: 11px; color: #9ca3af; font-weight: 600; text-align: center; }
+        .step-label.active { color: #2563eb; }
+        .step-label.done { color: #22c55e; }
+        .step-line { width: 60px; height: 2px; background: #e5e7eb; margin-bottom: 20px; transition: background 0.3s; }
+        .step-line.done { background: #22c55e; }
+
+        /* Step panels */
+        .step-panel { display: none; animation: fadeIn 0.35s ease; }
+        .step-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .step-title { font-size: 20px; font-weight: 800; color: #111827; margin-bottom: 6px; }
+        .step-subtitle { font-size: 13px; color: #64748b; margin-bottom: 22px; }
+
+        /* Form elements */
+        .form-label { font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 5px; display: block; }
+        .form-control, .form-select { border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; font-size: 14px; color: #111827; background: #f9fafb; width: 100%; transition: border 0.2s, box-shadow 0.2s, transform 0.15s; }
+        .form-control:hover, .form-select:hover { border-color: #93c5fd; transform: translateY(-1px); }
+        .form-control:focus, .form-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); background: white; outline: none; transform: translateY(-1px); }
+        textarea.form-control { resize: vertical; min-height: 90px; }
+
+        /* OTP boxes */
+        .otp-boxes { display: flex; gap: 10px; justify-content: center; margin: 18px 0; }
+        .otp-box { width: 52px; height: 56px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 22px; font-weight: 700; text-align: center; color: #111827; background: #f9fafb; transition: border 0.2s, box-shadow 0.2s, transform 0.15s; }
+        .otp-box:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); background: white; outline: none; transform: scale(1.05); }
+        .otp-box.filled { border-color: #22c55e; background: #f0fdf4; }
+
+        /* Buttons */
+        .btn-primary-action { background: #2563eb; color: white; border: none; padding: 13px 28px; border-radius: 11px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 6px; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary-action:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.30); }
+        .btn-primary-action:active { transform: translateY(0); }
+        .btn-primary-action:disabled { background: #93c5fd; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-back-step { background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; padding: 6px 0; margin-top: 10px; display: flex; align-items: center; gap: 5px; transition: color 0.2s; }
+        .btn-back-step:hover { color: #2563eb; }
+
+        .resend-btn { background: none; border: none; color: #2563eb; font-size: 13px; cursor: pointer; font-weight: 600; padding: 0; transition: color 0.2s; }
+        .resend-btn:hover { color: #1d4ed8; text-decoration: underline; }
+        .resend-btn:disabled { color: #94a3b8; cursor: not-allowed; text-decoration: none; }
+
+        /* Error/success messages */
+        .msg-box { border-radius: 10px; padding: 11px 14px; font-size: 13px; margin-bottom: 14px; display: none; }
+        .msg-box.error { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .msg-box.success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+
+        /* Customer info box */
+        .customer-info { background: linear-gradient(135deg, #eff6ff, #f0fdf4); border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+        .customer-info .ci-avatar { width: 42px; height: 42px; border-radius: 50%; background: #2563eb; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+        .customer-info .ci-name { font-weight: 700; font-size: 15px; color: #111827; }
+        .customer-info .ci-email { font-size: 12px; color: #64748b; }
+
+        /* Success screen */
+        .success-screen { text-align: center; padding: 20px 0; }
+        .success-screen .check-icon { width: 72px; height: 72px; background: linear-gradient(135deg, #22c55e, #16a34a); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; font-size: 30px; color: white; box-shadow: 0 8px 24px rgba(34,197,94,0.35); animation: popIn 0.5s cubic-bezier(0.22,1,0.36,1); }
+        @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .ticket-number-badge { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 12px 20px; display: inline-block; margin: 14px 0; font-size: 22px; font-weight: 800; color: #2563eb; letter-spacing: 2px; }
+
+        .footer-note { text-align: center; margin-top: 20px; color: #93c5fd; font-size: 12px; }
+    </style>
+</head>
+<body>
+<div class="ticket-wrapper">
+
+    <!-- Header -->
+    <div class="ticket-header">
+        <div class="logo">☀️ <span>SOLAR</span> CRM</div>
+        <p>Customer Support Portal</p>
+    </div>
+
+    <!-- Card -->
+    <div class="ticket-card">
+
+        <!-- Steps Indicator -->
+        <div class="steps" id="stepsIndicator">
+            <div class="step">
+                <div class="step-circle active" id="circle1">1</div>
+                <div class="step-label active" id="label1">Email</div>
+            </div>
+            <div class="step-line" id="line1"></div>
+            <div class="step">
+                <div class="step-circle" id="circle2">2</div>
+                <div class="step-label" id="label2">Verify OTP</div>
+            </div>
+            <div class="step-line" id="line2"></div>
+            <div class="step">
+                <div class="step-circle" id="circle3">3</div>
+                <div class="step-label" id="label3">Ticket</div>
+            </div>
+        </div>
+
+        <!-- Step 1: Email -->
+        <div class="step-panel active" id="step1">
+            <div class="step-title">Enter Your Email</div>
+            <div class="step-subtitle">We'll send a one-time password to verify you're our customer.</div>
+            <div class="msg-box error" id="s1_error"></div>
+            <label class="form-label">Email Address <span class="text-danger">*</span></label>
+            <input type="email" id="s1_email" class="form-control" placeholder="e.g. ramesh@example.com" autocomplete="email">
+            <button class="btn-primary-action mt-3" onclick="sendOTP()" id="s1_btn">
+                <i class="fa-solid fa-paper-plane"></i> Send OTP
+            </button>
+        </div>
+
+        <!-- Step 2: OTP -->
+        <div class="step-panel" id="step2">
+            <div class="step-title">Enter OTP</div>
+            <div class="step-subtitle" id="s2_subtitle">A 6-digit code was sent to your email.</div>
+            <div class="msg-box error" id="s2_error"></div>
+            <div class="msg-box success" id="s2_success"></div>
+            <div class="otp-boxes">
+                <input type="text" class="otp-box" maxlength="1" id="otp0" oninput="otpInput(0)" onkeydown="otpKeydown(event,0)">
+                <input type="text" class="otp-box" maxlength="1" id="otp1" oninput="otpInput(1)" onkeydown="otpKeydown(event,1)">
+                <input type="text" class="otp-box" maxlength="1" id="otp2" oninput="otpInput(2)" onkeydown="otpKeydown(event,2)">
+                <input type="text" class="otp-box" maxlength="1" id="otp3" oninput="otpInput(3)" onkeydown="otpKeydown(event,3)">
+                <input type="text" class="otp-box" maxlength="1" id="otp4" oninput="otpInput(4)" onkeydown="otpKeydown(event,4)">
+                <input type="text" class="otp-box" maxlength="1" id="otp5" oninput="otpInput(5)" onkeydown="otpKeydown(event,5)">
+            </div>
+            <button class="btn-primary-action" onclick="verifyOTP()" id="s2_btn">
+                <i class="fa-solid fa-shield-halved"></i> Verify OTP
+            </button>
+            <div style="text-align:center;margin-top:14px;font-size:13px;color:#64748b;">
+                Didn't receive? <button class="resend-btn" id="resendBtn" onclick="resendOTP()">Resend OTP</button>
+                <span id="resendTimer" style="display:none;color:#94a3b8;"> (wait <span id="timerCount">30</span>s)</span>
+            </div>
+            <button class="btn-back-step" onclick="goStep(1)"><i class="fa-solid fa-arrow-left"></i> Change email</button>
+        </div>
+
+        <!-- Step 3: Ticket Form -->
+        <div class="step-panel" id="step3">
+            <div class="step-title">Raise Your Ticket</div>
+            <div class="step-subtitle">Tell us about your issue and we'll get back to you soon.</div>
+            <div class="msg-box error" id="s3_error"></div>
+
+            <!-- Customer info box -->
+            <div class="customer-info" id="customerInfoBox" style="display:none;">
+                <div class="ci-avatar" id="ci_avatar">R</div>
+                <div>
+                    <div class="ci-name" id="ci_name">Customer Name</div>
+                    <div class="ci-email" id="ci_email">email@example.com</div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Issue Type <span class="text-danger">*</span></label>
+                    <select id="t_issue" class="form-select">
+                        <option value="">-- Select Issue Type --</option>
+                        <option value="installation">🔧 Installation Issue</option>
+                        <option value="billing">💰 Billing Query</option>
+                        <option value="technical">⚡ Technical Support</option>
+                        <option value="general">💬 General Inquiry</option>
+                        <option value="other">📋 Other</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Subject <span class="text-danger">*</span></label>
+                    <input type="text" id="t_subject" class="form-control" placeholder="Brief summary of your issue">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description <span class="text-danger">*</span></label>
+                    <textarea id="t_description" class="form-control" placeholder="Please describe your issue in detail..."></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Priority</label>
+                    <select id="t_priority" class="form-select">
+                        <option value="low">🟢 Low</option>
+                        <option value="medium" selected>🟡 Medium</option>
+                        <option value="high">🔴 High</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Phone (optional)</label>
+                    <input type="text" id="t_phone" class="form-control" placeholder="e.g. 9876543210">
+                </div>
+            </div>
+            <button class="btn-primary-action mt-3" onclick="submitTicket()" id="s3_btn">
+                <i class="fa-solid fa-ticket"></i> Submit Ticket
+            </button>
+            <button class="btn-back-step" onclick="goStep(2)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div class="step-panel" id="step4">
+            <div class="success-screen">
+                <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                <h4 style="font-weight:800;color:#111827;margin-bottom:6px;">Ticket Submitted!</h4>
+                <p style="color:#64748b;font-size:14px;">Your complaint has been registered. Our team will contact you soon.</p>
+                <div class="ticket-number-badge" id="ticketNumDisplay">TKT-0001</div>
+                <p style="color:#64748b;font-size:13px;margin-top:4px;">A confirmation email has been sent to your inbox.</p>
+                <button class="btn-primary-action mt-3" onclick="location.reload()" style="max-width:260px;margin:0 auto;">
+                    <i class="fa-solid fa-plus"></i> Raise Another Ticket
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer-note">© 2026 Solar CRM · Powered by Solar Energy Solutions</div>
+</div>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+let verifiedEmail = '';
+let resendInterval;
+
+// ── Step navigation ──
+function goStep(n) {
+    [1,2,3,4].forEach(i => {
+        document.getElementById('step'+i).classList.remove('active');
+    });
+    document.getElementById('step'+n).classList.add('active');
+    updateIndicator(n);
+}
+
+function updateIndicator(n) {
+    [1,2,3].forEach(i => {
+        const circle = document.getElementById('circle'+i);
+        const label  = document.getElementById('label'+i);
+        if (i < n) {
+            circle.className = 'step-circle done';
+            circle.innerHTML = '<i class="fa-solid fa-check" style="font-size:12px;"></i>';
+            label.className  = 'step-label done';
+        } else if (i === n) {
+            circle.className = 'step-circle active';
+            circle.innerHTML = i;
+            label.className  = 'step-label active';
+        } else {
+            circle.className = 'step-circle';
+            circle.innerHTML = i;
+            label.className  = 'step-label';
+        }
+    });
+    if (n > 1) document.getElementById('line1').classList.add('done'); else document.getElementById('line1').classList.remove('done');
+    if (n > 2) document.getElementById('line2').classList.add('done'); else document.getElementById('line2').classList.remove('done');
+    if (n === 4) document.getElementById('stepsIndicator').style.display = 'none';
+}
+
+function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg; el.style.display = 'block';
+}
+function hideMsg(id) { document.getElementById(id).style.display = 'none'; }
+
+// ── Step 1: Send OTP ──
+async function sendOTP() {
+    const email = document.getElementById('s1_email').value.trim();
+    hideMsg('s1_error');
+    if (!email) { showError('s1_error', 'Please enter your email address.'); return; }
+    const btn = document.getElementById('s1_btn');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+    try {
+        const fd = new FormData(); fd.append('email', email);
+        const res = await fetch('/ajax/ticket/send-otp/', { method:'POST', headers:{'X-CSRFToken':CSRF}, body:fd });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('s2_subtitle').textContent = `OTP sent to ${email}`;
+            goStep(2);
+            startResendTimer();
+            clearOTPBoxes();
+            setTimeout(() => document.getElementById('otp0').focus(), 300);
+        } else {
+            showError('s1_error', data.error || 'Failed to send OTP. Please try again.');
+        }
+    } catch(e) { showError('s1_error', 'Network error. Please try again.'); }
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP';
+}
+
+// ── Step 2: Verify OTP ──
+function otpInput(i) {
+    const box = document.getElementById('otp'+i);
+    box.value = box.value.replace(/\D/g,'');
+    if (box.value) { box.classList.add('filled'); if (i < 5) document.getElementById('otp'+(i+1)).focus(); }
+    else box.classList.remove('filled');
+}
+function otpKeydown(e, i) {
+    if (e.key === 'Backspace' && !document.getElementById('otp'+i).value && i > 0) document.getElementById('otp'+(i-1)).focus();
+}
+function clearOTPBoxes() {
+    for(let i=0;i<6;i++){ const b=document.getElementById('otp'+i); b.value=''; b.classList.remove('filled'); }
+}
+function getOTP() { return Array.from({length:6},(_,i)=>document.getElementById('otp'+i).value).join(''); }
+
+async function verifyOTP() {
+    const email = document.getElementById('s1_email').value.trim();
+    const otp   = getOTP();
+    hideMsg('s2_error'); hideMsg('s2_success');
+    if (otp.length < 6) { showError('s2_error', 'Please enter the complete 6-digit OTP.'); return; }
+    const btn = document.getElementById('s2_btn');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+    try {
+        const fd = new FormData(); fd.append('email', email); fd.append('otp', otp);
+        const res = await fetch('/ajax/ticket/verify-otp/', { method:'POST', headers:{'X-CSRFToken':CSRF}, body:fd });
+        const data = await res.json();
+        if (data.success) {
+            verifiedEmail = email;
+            // Show customer info
+            document.getElementById('ci_name').textContent  = data.customer_name;
+            document.getElementById('ci_email').textContent = email;
+            document.getElementById('ci_avatar').textContent = data.customer_name.charAt(0).toUpperCase();
+            document.getElementById('customerInfoBox').style.display = 'flex';
+            goStep(3);
+        } else {
+            showError('s2_error', data.error || 'Invalid OTP. Please try again.');
+        }
+    } catch(e) { showError('s2_error', 'Network error. Please try again.'); }
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Verify OTP';
+}
+
+async function resendOTP() {
+    document.getElementById('resendBtn').disabled = true;
+    const email = document.getElementById('s1_email').value.trim();
+    const fd = new FormData(); fd.append('email', email);
+    await fetch('/ajax/ticket/send-otp/', { method:'POST', headers:{'X-CSRFToken':CSRF}, body:fd });
+    const s = document.getElementById('s2_success');
+    s.textContent = 'OTP resent successfully!'; s.style.display = 'block';
+    setTimeout(() => s.style.display='none', 3000);
+    clearOTPBoxes();
+    startResendTimer();
+}
+
+function startResendTimer() {
+    clearInterval(resendInterval);
+    let count = 30;
+    document.getElementById('resendBtn').disabled = true;
+    document.getElementById('resendTimer').style.display = 'inline';
+    document.getElementById('timerCount').textContent = count;
+    resendInterval = setInterval(() => {
+        count--;
+        document.getElementById('timerCount').textContent = count;
+        if (count <= 0) {
+            clearInterval(resendInterval);
+            document.getElementById('resendBtn').disabled = false;
+            document.getElementById('resendTimer').style.display = 'none';
+        }
+    }, 1000);
+}
+
+// ── Step 3: Submit Ticket ──
+async function submitTicket() {
+    const issue   = document.getElementById('t_issue').value;
+    const subject = document.getElementById('t_subject').value.trim();
+    const desc    = document.getElementById('t_description').value.trim();
+    hideMsg('s3_error');
+    if (!issue || !subject || !desc) { showError('s3_error', 'Please fill in Issue Type, Subject and Description.'); return; }
+    const btn = document.getElementById('s3_btn');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+    try {
+        const fd = new FormData();
+        fd.append('email',       verifiedEmail);
+        fd.append('issue_type',  issue);
+        fd.append('subject',     subject);
+        fd.append('description', desc);
+        fd.append('priority',    document.getElementById('t_priority').value);
+        fd.append('phone',       document.getElementById('t_phone').value);
+        const res = await fetch('/ajax/ticket/submit/', { method:'POST', headers:{'X-CSRFToken':CSRF}, body:fd });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('ticketNumDisplay').textContent = data.ticket_number;
+            goStep(4);
+        } else {
+            showError('s3_error', data.error || 'Failed to submit ticket.');
+        }
+    } catch(e) { showError('s3_error', 'Network error. Please try again.'); }
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-ticket"></i> Submit Ticket';
+}
+
+// Enter key support
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        if (document.getElementById('step1').classList.contains('active')) sendOTP();
+        else if (document.getElementById('step2').classList.contains('active')) verifyOTP();
+    }
+});
+</script>
+</body>
+</html>

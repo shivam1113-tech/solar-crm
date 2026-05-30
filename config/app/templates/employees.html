@@ -164,13 +164,14 @@
         <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
         <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
         <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
-
         {% if request.user.is_superuser %}
-        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label">Invoices</span></a>
-        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label">Import Leads</span></a>
-        <a href="/employees/" class="active"><i class="fa-solid fa-user-tie"></i><span class="menu-label">Employees</span></a>
+        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label"> Invoices</span></a>
         {% endif %}
-
+        <a href="/tickets/"><i class="fa-solid fa-ticket"></i><span class="menu-label"> Tickets</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label"> Import Leads</span></a>
+        <a href="/employees/" class="active"><i class="fa-solid fa-user-tie"></i><span class="menu-label"> Employees</span></a>
+        {% endif %}
         <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
     </div>
 </div>

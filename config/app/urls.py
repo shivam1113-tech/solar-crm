@@ -79,6 +79,15 @@ urlpatterns = [
     path('site-surveys/<int:id>/edit/', views.edit_site_survey, name='edit_site_survey'),
     path('site-surveys/<int:id>/delete/', views.delete_site_survey, name='delete_site_survey'),
 
+      # ── Public (no login) ──────────────────────────
+    path('raise-ticket/', views.raise_ticket_page, name='raise_ticket'),
+
+    # ── Staff views (login required) ────────────────
+    path('tickets/',                               views.ticket_list,    name='ticket_list'),
+    path('ajax/ticket/<int:ticket_id>/update/',    views.update_ticket,  name='ticket_update'),
+    path('ajax/ticket/<int:ticket_id>/delete/',    views.delete_ticket,  name='ticket_delete'),
+
+
 
     # ================= AJAX =================
     path('ajax/dashboard-stats/', views.ajax_dashboard_stats, name='ajax_dashboard_stats'),
@@ -92,4 +101,7 @@ urlpatterns = [
     path('ajax/product/<int:id>/stock/', views.ajax_product_stock, name='ajax_product_stock'),
     path('ajax/product/<int:id>/delete/', views.ajax_delete_product, name='ajax_delete_product'),
     path('site-surveys/<int:id>/status/', views.ajax_change_survey_status, name='ajax_survey_status'),
+    path('ajax/ticket/send-otp/',    views.send_otp,     name='ticket_send_otp'),
+    path('ajax/ticket/verify-otp/',  views.verify_otp,   name='ticket_verify_otp'),
+    path('ajax/ticket/submit/',      views.submit_ticket, name='ticket_submit'),
 ]
