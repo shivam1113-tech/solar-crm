@@ -406,6 +406,9 @@ def add_quote(request):
     else:
         leads = Lead.objects.filter(assigned_to=request.user)
 
+    # Products needed for the dropdown in quote form
+    products = Product.objects.all().order_by('name')
+
     if request.method == "POST":
         lead = get_object_or_404(Lead, id=request.POST.get('lead'))
 
@@ -425,7 +428,8 @@ def add_quote(request):
 
     return render(request, 'quote_form.html', {
         'title': 'Add Quote',
-        'leads': leads
+        'leads': leads,
+        'products': products,    # ← this is what feeds the dropdown
     })
 
 
@@ -464,6 +468,7 @@ def edit_quote(request, id):
         'quote': quote,
         'title': 'Edit Quote',
         'leads': leads,
+        'products': Product.objects.all().order_by('name'),
     })
 
 
@@ -1500,12 +1505,12 @@ def edit_site_survey(request, id):
 @login_required
 def delete_site_survey(request, id):
     if not request.user.is_superuser:
-        messages.error(request, "Only admin can delete surveys")
-        return redirect('site_surveys')
+        from django.http import JsonResponse
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
     survey = get_object_or_404(SiteSurvey, id=id)
     survey.delete()
-    messages.success(request, "Site survey deleted")
-    return redirect('site_surveys')
+    from django.http import JsonResponse
+    return JsonResponse({'success': True})
  
  
 @login_required

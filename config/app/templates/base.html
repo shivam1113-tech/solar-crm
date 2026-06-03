@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Solar CRM{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+    <style>
+        /* ══════════════════════════════════════
+           GLOBAL RESET & BASE
+        ══════════════════════════════════════ */
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
+
+        /* ══════════════════════════════════════
+           SIDEBAR
+        ══════════════════════════════════════ */
+        .sidebar {
+            width: 245px; height: 100vh; position: fixed; left: 0; top: 0;
+            background: linear-gradient(180deg, #071b36, #0b2547); color: white;
+            padding: 22px 14px; overflow-y: auto; overflow-x: hidden;
+            transition: width 0.3s ease, transform 0.3s ease; z-index: 1100;
+        }
+        .sidebar.collapsed { width: 68px; }
+        .sidebar.collapsed .menu-label,
+        .sidebar.collapsed .brand-text { display: none; }
+        .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
+
+        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px;
+            display: flex; align-items: center; gap: 10px;
+            white-space: nowrap; overflow: hidden; }
+        .brand span { color: #f59e0b; }
+
+        .menu a {
+            display: flex; align-items: center; gap: 14px;
+            padding: 12px 14px; margin-bottom: 6px;
+            color: #dbeafe; text-decoration: none;
+            border-radius: 10px; font-size: 15px;
+            white-space: nowrap; overflow: hidden;
+            transition: all 0.2s;
+        }
+        .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
+        .menu a.active, .menu a:hover { background: #2563eb; color: white; }
+        .menu a:hover { transform: translateX(3px); }
+
+        /* Sidebar overlay (mobile) */
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 1050;
+        }
+        .sidebar-overlay.show { display: block; }
+
+        /* ══════════════════════════════════════
+           MAIN AREA
+        ══════════════════════════════════════ */
+        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
+        .main.expanded { margin-left: 68px; }
+
+        /* ══════════════════════════════════════
+           TOPBAR
+        ══════════════════════════════════════ */
+        .topbar {
+            height: 68px; background: white; border-bottom: 1px solid #e5e7eb;
+            padding: 0 24px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 999;
+        }
+        .hamburger {
+            cursor: pointer; font-size: 20px; color: #374151;
+            background: none; border: none; padding: 6px 10px;
+            border-radius: 8px; transition: background 0.2s, transform 0.15s;
+        }
+        .hamburger:hover { background: #f1f5f9; transform: scale(1.08); }
+
+        .admin-box { display: flex; align-items: center; gap: 12px; }
+        .avatar {
+            width: 40px; height: 40px; border-radius: 50%; background: #2563eb;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 16px;
+        }
+
+        /* Search */
+        .search-wrapper { position: relative; }
+        .search-box {
+            width: 300px; border: 1px solid #dbe3ef; border-radius: 10px;
+            padding: 9px 14px 9px 36px; color: #64748b; font-size: 14px;
+        }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .search-results {
+            position: absolute; top: 44px; left: 0; width: 360px;
+            background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1); z-index: 9999;
+            display: none; max-height: 300px; overflow-y: auto;
+        }
+        .search-result-item {
+            padding: 10px 14px; display: flex; align-items: center;
+            gap: 10px; cursor: pointer; transition: background 0.2s;
+        }
+        .search-result-item:hover { background: #f8fafc; }
+        .search-mini-avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: #dbeafe; color: #1d4ed8;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; flex-shrink: 0;
+        }
+
+        /* Notifications */
+        .notif-bell { position: relative; cursor: pointer; }
+        .notif-badge {
+            position: absolute; top: -6px; right: -6px;
+            background: #ef4444; color: white; border-radius: 50%;
+            width: 18px; height: 18px; font-size: 10px;
+            display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+        .notif-dropdown {
+            position: absolute; top: 36px; right: -10px; width: 320px;
+            background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1); z-index: 9999; display: none;
+        }
+        .notif-header { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 14px; }
+        .notif-item { padding: 10px 16px; border-bottom: 1px solid #f8fafc; font-size: 13px; }
+        .notif-item:last-child { border-bottom: none; }
+
+        /* ══════════════════════════════════════
+           CONTENT
+        ══════════════════════════════════════ */
+        .content { padding: 28px 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
+        .page-header h2 { font-weight: 800; margin-bottom: 4px; font-size: 26px; }
+
+        /* ══════════════════════════════════════
+           COMMON COMPONENTS
+        ══════════════════════════════════════ */
+        /* Panel */
+        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 22px; }
+
+        /* Buttons */
+        .add-btn {
+            background: #2563eb; color: white; border: none;
+            padding: 11px 20px; border-radius: 9px; text-decoration: none;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 7px;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        .add-btn:hover { background: #1d4ed8; color: white; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.28); }
+        .add-btn:active { transform: translateY(0); }
+
+        .btn-save {
+            background: #2563eb; color: white; border: none;
+            padding: 12px 28px; border-radius: 10px; font-size: 15px;
+            font-weight: 600; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 7px;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-save:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.30); }
+        .btn-save:active { transform: translateY(0); }
+        .btn-save.edit { background: #f97316; }
+        .btn-save.edit:hover { background: #ea6c00; box-shadow: 0 6px 20px rgba(249,115,22,0.30); }
+
+        .btn-back {
+            background: white; color: #374151; border: 1px solid #dbe3ef;
+            padding: 11px 18px; border-radius: 10px; font-size: 14px;
+            text-decoration: none; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 7px;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-back:hover { background: #f1f5f9; color: #111827; transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+        .btn-back:active { transform: translateY(0); }
+
+        .btn-cancel {
+            background: white; color: #374151; border: 1px solid #dbe3ef;
+            padding: 11px 18px; border-radius: 10px; font-size: 14px;
+            text-decoration: none; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 7px;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-cancel:hover { background: #f1f5f9; color: #111827; transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+
+        /* Form elements */
+        .form-label { font-weight: 600; font-size: 14px; color: #374151; margin-bottom: 6px; display: block; }
+        .form-control, .form-select {
+            border: 1px solid #dbe3ef; border-radius: 10px;
+            padding: 11px 14px; font-size: 14px; color: #111827;
+            background: #f9fafb; width: 100%;
+            transition: border 0.2s, box-shadow 0.2s, background 0.2s, transform 0.15s;
+        }
+        .form-control:hover, .form-select:hover { border-color: #93c5fd; transform: translateY(-1px); }
+        .form-control:focus, .form-select:focus {
+            border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+            background: white; outline: none; transform: translateY(-1px);
+        }
+        textarea.form-control { resize: vertical; min-height: 100px; }
+
+        .form-section-title {
+            font-size: 12px; font-weight: 700; color: #9ca3af;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            margin: 22px 0 14px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;
+            display: flex; align-items: center; gap: 7px;
+        }
+
+        /* Form card animated */
+        .form-card {
+            background: white; border: 1px solid #e5e7eb; border-radius: 18px;
+            padding: 32px; max-width: 860px;
+            box-shadow: 0 4px 24px rgba(37,99,235,0.06);
+            animation: cardSlideIn 0.45s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        @keyframes cardSlideIn {
+            from { opacity: 0; transform: translateY(28px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .form-card .row    { animation: fadeUp 0.4s ease both; }
+        .form-card .row:nth-child(1) { animation-delay: 0.06s; }
+        .form-card .row:nth-child(2) { animation-delay: 0.12s; }
+        .form-card .row:nth-child(3) { animation-delay: 0.18s; }
+        .form-card .row:nth-child(4) { animation-delay: 0.24s; }
+        .form-card .row:nth-child(5) { animation-delay: 0.30s; }
+        .form-card .d-flex { animation: fadeUp 0.4s ease 0.34s both; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Status badges */
+        .badge-soft { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+        .badge-new        { background: #dbeafe; color: #1d4ed8; }
+        .badge-contacted  { background: #dcfce7; color: #15803d; }
+        .badge-qualified  { background: #ffedd5; color: #c2410c; }
+        .badge-proposal   { background: #ede9fe; color: #6d28d9; }
+        .badge-won        { background: #dcfce7; color: #15803d; }
+        .badge-lost       { background: #fee2e2; color: #b91c1c; }
+
+        /* Status select dropdown */
+        .status-select { border: none; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; transition: transform 0.15s; }
+        .status-select:hover { transform: scale(1.04); }
+        .status-new        { background: #dbeafe; color: #1d4ed8; }
+        .status-contacted  { background: #dcfce7; color: #15803d; }
+        .status-qualified  { background: #ffedd5; color: #c2410c; }
+        .status-proposal   { background: #ede9fe; color: #6d28d9; }
+        .status-won        { background: #dcfce7; color: #15803d; }
+        .status-lost       { background: #fee2e2; color: #b91c1c; }
+
+        /* Toast notifications */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+        .toast-msg {
+            background: white; border-left: 4px solid #22c55e; border-radius: 10px;
+            padding: 14px 18px; margin-bottom: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12); font-size: 14px;
+            min-width: 280px; display: flex; align-items: center; gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        .toast-msg.error   { border-left-color: #ef4444; }
+        .toast-msg.warning { border-left-color: #f59e0b; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+
+        /* Modal */
+        .modal-content { border-radius: 18px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalPop 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.94) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-header { background: linear-gradient(135deg, #071b36, #1d4ed8); color: white; border-radius: 18px 18px 0 0; padding: 18px 24px; }
+        .modal-header .btn-close { filter: invert(1); }
+        .btn-modal-primary {
+            background: #2563eb; color: white; border: none;
+            padding: 11px 24px; border-radius: 10px; font-size: 14px;
+            font-weight: 600; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 7px;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-modal-primary:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.28); }
+        .btn-modal-secondary {
+            background: white; color: #374151; border: 1px solid #dbe3ef;
+            padding: 11px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: background 0.2s, transform 0.15s;
+        }
+        .btn-modal-secondary:hover { background: #f1f5f9; transform: translateY(-1px); }
+
+        /* Stat cards */
+        .stat-card {
+            background: white; border: 1px solid #e5e7eb; border-radius: 14px;
+            padding: 16px 18px; display: flex; align-items: center; gap: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+        .icon-circle {
+            width: 46px; height: 46px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; color: white; flex-shrink: 0;
+        }
+        .ic-blue { background: #2563eb; } .ic-green { background: #22c55e; }
+        .ic-orange { background: #f97316; } .ic-red { background: #ef4444; }
+        .ic-purple { background: #7c3aed; } .ic-yellow { background: #f59e0b; }
+        .stat-card h4 { font-size: 22px; font-weight: 800; margin: 0; }
+        .stat-card p  { margin: 0; color: #64748b; font-size: 12px; }
+
+        /* Table row delete animation */
+        .row-deleting { background: #fee2e2 !important; transition: all 0.4s; opacity: 0.5; }
+
+        /* Footer */
+        .footer {
+            text-align: center; padding: 20px; color: #64748b;
+            border-top: 1px solid #e5e7eb; background: white;
+            margin-top: 26px; font-size: 13px;
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════ */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 245px !important; }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main { margin-left: 0 !important; }
+            .topbar { padding: 0 14px; gap: 10px; }
+            .content { padding: 14px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .panel { padding: 16px; }
+            .form-card { padding: 20px 16px; }
+            .admin-box strong, .admin-box small { display: none; }
+            .table-responsive { overflow-x: auto; }
+            .add-btn { width: 100%; justify-content: center; }
+            .search-wrapper { max-width: 180px; flex: 1; }
+            .search-box { width: 100%; font-size: 13px; }
+            .search-results { width: 100%; max-width: 320px; }
+            .notif-dropdown { width: 280px; right: -60px; }
+            .dataTables_wrapper .dt-buttons,
+            .dataTables_wrapper .dataTables_filter { float: none !important; text-align: left !important; margin-bottom: 10px; }
+            .dataTables_wrapper .dataTables_filter input { width: 100%; margin-left: 0; margin-top: 6px; }
+            .btn-save, .btn-back, .btn-cancel { padding: 10px 16px; font-size: 13px; }
+        }
+        @media (max-width: 480px) {
+            .search-wrapper { display: none; }
+            .d-flex.gap-3 { flex-wrap: wrap; }
+            .footer { font-size: 12px; }
+            .toast-msg { min-width: auto; width: calc(100vw - 30px); }
+            .toast-container { left: 15px; right: 15px; }
+
+            #profileDropdown a:hover{
+    background:#f8fafc;
+}
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ══ SIDEBAR ══ -->
+<div class="sidebar" id="sidebar">
+    <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
+    <div class="menu">
+        <a href="/dashboard/"    {% block nav_dashboard    %}{% endblock %} ><i class="fa-solid fa-house"></i><span class="menu-label"> Dashboard</span></a>
+        <a href="/leads/"        {% block nav_leads        %}{% endblock %} ><i class="fa-solid fa-users"></i><span class="menu-label"> Leads</span></a>
+        <a href="/followups/"    {% block nav_followups    %}{% endblock %} ><i class="fa-solid fa-phone"></i><span class="menu-label"> Follow Ups</span></a>
+        <a href="/customers/"    {% block nav_customers    %}{% endblock %} ><i class="fa-solid fa-user-group"></i><span class="menu-label"> Customers</span></a>
+        <a href="/site-surveys/" {% block nav_site_surveys %}{% endblock %} ><i class="fa-solid fa-map-location-dot"></i><span class="menu-label"> Site Surveys</span></a>
+        <a href="/products/"     {% block nav_products     %}{% endblock %} ><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
+        <a href="/projects/"     {% block nav_projects     %}{% endblock %} ><i class="fa-solid fa-solar-panel"></i><span class="menu-label"> Projects</span></a>
+        <a href="/quotes/"       {% block nav_quotes       %}{% endblock %} ><i class="fa-solid fa-file-invoice"></i><span class="menu-label"> Quotes</span></a>
+        <a href="/tickets/"      {% block nav_tickets      %}{% endblock %} ><i class="fa-solid fa-ticket"></i><span class="menu-label"> Tickets</span></a>
+        {% if request.user.is_superuser %}
+        <a href="/invoices/"     {% block nav_invoices     %}{% endblock %} ><i class="fa-solid fa-receipt"></i><span class="menu-label"> Invoices</span></a>
+        <a href="/import/"       {% block nav_import       %}{% endblock %} ><i class="fa-solid fa-upload"></i><span class="menu-label"> Import Leads</span></a>
+        <a href="/employees/"    {% block nav_employees    %}{% endblock %} ><i class="fa-solid fa-user-tie"></i><span class="menu-label"> Employees</span></a>
+        {% endif %}
+        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label"> Logout</span></a>
+    </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main" id="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-3">
+            <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input class="search-box" id="liveSearch" placeholder="Search leads, customers..." autocomplete="off">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+        <div class="admin-box" style="position:relative;">
+    <div class="notif-bell" id="notifBell" onclick="toggleNotifications()">
+        <i class="fa-regular fa-bell fs-5 text-muted"></i>
+        <span class="notif-badge" id="notifCount" style="display:none;">0</span>
+
+        <div class="notif-dropdown" id="notifDropdown">
+            <div class="notif-header">
+                <i class="fa-solid fa-bell me-2"></i>Notifications
+            </div>
+            <div id="notifList">
+                <div class="notif-item text-muted">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <div onclick="toggleProfile()" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+        <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
+        <div>
+            <strong style="font-size:14px;">{{ request.user.username }}</strong><br>
+            <small class="text-muted">
+                {% if request.user.is_superuser %}Admin{% else %}Employee{% endif %}
+            </small>
+        </div>
+        <i class="fa-solid fa-chevron-down" style="font-size:11px;color:#94a3b8;"></i>
+    </div>
+
+    <div id="profileDropdown"
+         style="display:none;position:absolute;top:55px;right:0;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.1);width:240px;z-index:99999;overflow:hidden;">
+
+        <div style="background:linear-gradient(135deg,#071b36,#0b2547);padding:16px 18px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:44px;height:44px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:18px;">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div>
+                    <div style="color:white;font-weight:700;font-size:14px;">
+                        {{ request.user.username }}
+                    </div>
+                    <div style="color:#93c5fd;font-size:12px;">
+                        {% if request.user.is_superuser %}🔑 Administrator{% else %}👤 Employee{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding:12px 18px;border-bottom:1px solid #f1f5f9;">
+            <div style="font-size:12px;color:#64748b;margin-bottom:6px;">
+                <i class="fa-solid fa-envelope" style="width:16px;"></i>
+                {{ request.user.email|default:"No email set" }}
+            </div>
+
+            <div style="font-size:12px;color:#64748b;margin-bottom:6px;">
+                <i class="fa-regular fa-calendar" style="width:16px;"></i>
+                Joined {{ request.user.date_joined|date:"d M Y" }}
+            </div>
+
+            <div style="font-size:12px;">
+                <a href="/forgot-password/" style="color:#2563eb;text-decoration:none;">
+                    <i class="fa-solid fa-key" style="width:16px;"></i>
+                    Reset Password
+                </a>
+            </div>
+        </div>
+
+        <div style="padding:8px;">
+            {% if request.user.is_superuser %}
+            <a href="/employees/" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;text-decoration:none;color:#374151;font-size:13px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                <i class="fa-solid fa-users" style="color:#2563eb;width:16px;"></i>
+                Manage Employees
+            </a>
+
+            <a href="/admin/" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;text-decoration:none;color:#374151;font-size:13px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                <i class="fa-solid fa-gear" style="color:#7c3aed;width:16px;"></i>
+                Django Admin
+            </a>
+            {% else %}
+            <div style="padding:9px 12px;font-size:13px;color:#64748b;">
+                <i class="fa-solid fa-shield-halved" style="color:#22c55e;width:16px;"></i>
+                Limited Access Account
+            </div>
+            {% endif %}
+
+            <a href="/logout/" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;text-decoration:none;color:#ef4444;font-size:13px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
+                <i class="fa-solid fa-right-from-bracket" style="width:16px;"></i>
+                Logout
+            </a>
+        </div>
+    </div>
+        </div>
+</div>
+
+    <!-- Page Content -->
+    <div class="content">
+        {% if messages %}
+            {% for msg in messages %}
+            <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show" style="border-radius:12px;">
+                {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
+</div>
+
+<!-- ══ SCRIPTS ══ -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js_head %}{% endblock %}
+
+<script>
+const CSRF = '{{ csrf_token }}';
+
+/* ── Sidebar toggle ── */
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const main    = document.getElementById('main');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('mobile-open');
+        overlay.classList.toggle('show');
+    } else {
+        sidebar.classList.toggle('collapsed');
+        main.classList.toggle('expanded');
+    }
+}
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+/* ── Toast ── */
+function showToast(msg, type='success') {
+    const t = document.createElement('div');
+    t.className = 'toast-msg' + (type==='error'?' error':type==='warning'?' warning':'');
+    const icon  = type==='success'?'circle-check':type==='warning'?'triangle-exclamation':'circle-xmark';
+    const color = type==='success'?'#22c55e':type==='warning'?'#f59e0b':'#ef4444';
+    t.innerHTML = `<i class="fa-solid fa-${icon}" style="color:${color}"></i> ${msg}`;
+    document.getElementById('toastContainer').appendChild(t);
+    setTimeout(() => { t.style.animation='slideOut 0.3s ease forwards'; setTimeout(()=>t.remove(),300); }, 3200);
+}
+
+/* ── Live Search ── */
+let _searchTimeout;
+const _searchEl = document.getElementById('liveSearch');
+if (_searchEl) {
+    _searchEl.addEventListener('input', function() {
+        clearTimeout(_searchTimeout);
+        const q = this.value.trim();
+        const results = document.getElementById('searchResults');
+        if (q.length < 2) { results.style.display='none'; return; }
+        _searchTimeout = setTimeout(() => {
+            fetch(`/ajax/search/?q=${encodeURIComponent(q)}`)
+            .then(r=>r.json()).then(data=>{
+                if (!data.results.length) {
+                    results.innerHTML='<div style="padding:12px 16px;color:#94a3b8;font-size:13px;">No results found</div>';
+                } else {
+                    results.innerHTML = data.results.map(r=>
+                        `<div class="search-result-item" onclick="window.location='/${r.type==='lead'?'lead':'customers'}/${r.id}/'">
+                            <div class="search-mini-avatar">${r.name.substring(0,2).toUpperCase()}</div>
+                            <div><strong style="font-size:13px;">${r.name}</strong><br>
+                            <small style="color:#64748b;">${r.email} · ${r.status}</small></div>
+                        </div>`).join('');
+                }
+                results.style.display='block';
+            });
+        }, 300);
+    });
+}
+
+/* ── Notifications ── */
+function loadNotifications() {
+    fetch('/ajax/notifications/').then(r=>r.json()).then(data=>{
+        const badge = document.getElementById('notifCount');
+        const list  = document.getElementById('notifList');
+        if (data.total_notifications > 0) {
+            badge.style.display='flex';
+            badge.textContent = data.total_notifications > 9 ? '9+' : data.total_notifications;
+        } else { badge.style.display='none'; }
+        let html = '';
+        data.upcoming.forEach(f => { html+=`<div class="notif-item"><i class="fa-solid fa-phone text-primary me-2"></i><strong>${f.title}</strong> — ${f.lead__name}</div>`; });
+        data.new_leads.forEach(l => { html+=`<div class="notif-item"><i class="fa-solid fa-user-plus text-success me-2"></i>New lead: <strong>${l.name}</strong></div>`; });
+        list.innerHTML = html || '<div class="notif-item text-muted">No notifications</div>';
+    }).catch(()=>{});
+}
+function toggleNotifications() {
+    const d = document.getElementById('notifDropdown');
+    d.style.display = d.style.display==='block' ? 'none' : 'block';
+}
+loadNotifications();
+setInterval(loadNotifications, 30000);
+
+/* ── Close dropdowns on outside click ── */
+document.addEventListener('click', function(e) {
+
+    if (!e.target.closest('.search-wrapper')) {
+        document.getElementById('searchResults').style.display = 'none';
+    }
+
+    if (!e.target.closest('#notifBell')) {
+        document.getElementById('notifDropdown').style.display = 'none';
+    }
+
+    if (!e.target.closest('.admin-box')) {
+        const profile = document.getElementById('profileDropdown');
+        if (profile) {
+            profile.style.display = 'none';
+        }
+    }
+
+});
+function toggleProfile() {
+    const d = document.getElementById('profileDropdown');
+
+    if (!d) return;
+
+    d.style.display =
+        d.style.display === 'block'
+            ? 'none'
+            : 'block';
+}
+</script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

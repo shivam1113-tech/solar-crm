@@ -1,217 +1,640 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ title }} - Solar CRM</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
-        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease, transform 0.3s ease; z-index: 1100; }
-        .sidebar.collapsed { width: 68px; }
-        .sidebar.collapsed .menu-label { display: none; }
-        .sidebar.collapsed .brand-text { display: none; }
-        .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
-        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; }
-        .brand span { color: #f59e0b; }
-        .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
-        .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
-        .menu a.active, .menu a:hover { background: #2563eb; color: white; }
-        .menu a:hover { transform: translateX(3px); }
-        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
-        .main.expanded { margin-left: 68px; }
-        .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999; }
-        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; transition: background 0.2s, transform 0.15s; }
-        .hamburger:hover { background: #f1f5f9; transform: scale(1.08); }
-        .admin-box { display: flex; align-items: center; gap: 12px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
-        .content { padding: 28px 24px; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
-        .page-header h2 { font-weight: 800; margin-bottom: 4px; font-size: 26px; }
-        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 36px; width: 100%; box-shadow: 0 4px 24px rgba(37,99,235,0.07); animation: cardSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
-        @keyframes cardSlideIn { from { opacity: 0; transform: translateY(32px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .panel .row { animation: fadeUp 0.4s ease both; }
-        .panel .row:nth-child(1) { animation-delay: 0.08s; } .panel .row:nth-child(2) { animation-delay: 0.14s; } .panel .row:nth-child(3) { animation-delay: 0.20s; } .panel .row:nth-child(4) { animation-delay: 0.26s; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-        label, .form-label { font-weight: 600; font-size: 14px; color: #374151; margin-bottom: 6px; display: block; }
-        .form-control, .form-select { border: 1px solid #dbe3ef; border-radius: 10px; padding: 11px 14px; font-size: 15px; color: #111827; background: #f9fafb; width: 100%; transition: border 0.2s, box-shadow 0.2s, background 0.2s, transform 0.15s; }
-        .form-control:hover, .form-select:hover { border-color: #93c5fd; transform: translateY(-1px); }
-        .form-control:focus, .form-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); background: white; outline: none; transform: translateY(-1px); }
-        textarea.form-control { resize: vertical; min-height: 100px; }
-        .btn-save { background: #2563eb; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
-        .btn-save:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.30); }
-        .btn-save:active { transform: translateY(0); box-shadow: none; }
-        .btn-cancel { background: white; color: #374151; border: 1px solid #dbe3ef; padding: 12px 20px; border-radius: 10px; font-size: 15px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
-        .btn-cancel:hover { background: #f1f5f9; color: #111827; transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
-        .btn-cancel:active { transform: translateY(0); }
-        .footer { text-align: center; padding: 20px; color: #64748b; border-top: 1px solid #e5e7eb; background: white; margin-top: 24px; font-size: 13px; }
-        
-        
+{% extends 'base.html' %}
 
-        /* ===== MOBILE RESPONSIVE ONLY ===== */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1050;
-        }
+{% block title %}{{ title }} - Solar CRM{% endblock %}
+{% block nav_quotes %}class="active"{% endblock %}
 
-        .sidebar-overlay.show {
-            display: block;
-        }
+{% block extra_css %}
+<style>
+.product-row {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
 
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                width: 245px !important;
-                transition: transform 0.3s ease;
-                z-index: 1100;
-            }
+.product-row-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+    gap: 10px;
+    padding: 0 14px;
+    margin-bottom: 6px;
+}
 
-            .sidebar.mobile-open {
-                transform: translateX(0);
-            }
+.product-row-header span {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+}
 
-            .main {
-                margin-left: 0 !important;
-            }
+.product-row select,
+.product-row input {
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    background: white;
+    width: 100%;
+}
 
-            .topbar {
-                padding: 0 14px;
-            }
+.product-row input[readonly] {
+    background: #f1f5f9;
+    color: #374151;
+    font-weight: 600;
+}
 
-            .content {
-                padding: 14px;
-            }
+.remove-row-btn {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 11px;
+    cursor: pointer;
+}
 
-            .panel {
-                padding: 20px 16px;
-            }
+.add-product-btn {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1.5px dashed #bfdbfe;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 4px;
+}
 
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
+.summary-box {
+    background: linear-gradient(135deg, #071b36, #0b2547);
+    border-radius: 16px;
+    padding: 24px;
+    color: white;
+}
 
-            .admin-box strong,
-            .admin-box small {
-                display: none;
-            }
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 14px;
+}
 
-            .btn-save,
-            .btn-cancel {
-                width: 100%;
-                justify-content: center;
-            }
-        }
+.summary-row .label {
+    color: #93c5fd;
+}
 
-        @media (max-width: 480px) {
-            .d-flex.gap-3 {
-                flex-wrap: wrap;
-            }
+.summary-row .value {
+    font-weight: 700;
+    color: white;
+}
 
-            .footer {
-                font-size: 12px;
-            }
-        }
+.summary-row.total-row .label {
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+}
 
-    </style>
-</head>
-<body>
+.summary-row.total-row .value {
+    font-size: 22px;
+    color: #f59e0b;
+}
 
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+.discount-row .value {
+    color: #86efac;
+}
 
-<div class="sidebar" id="sidebar">
-    <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
-    <div class="menu">
-        <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label"> Dashboard</span></a>
-        <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label"> Leads</span></a>
-        <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label"> Follow Ups</span></a>
-        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
-         <a href="/site-surveys/"><i class="fa-solid fa-map-location-dot"></i><span class="menu-label">Site Surveys</span></a>
-         <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
-<a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
-<a href="/quotes/" class="active"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
-{% if request.user.is_superuser %}
-        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label"> Invoices</span></a>
-        {% endif %}
-        <a href="/tickets/"><i class="fa-solid fa-ticket"></i><span class="menu-label"> Tickets</span></a>
-        {% if request.user.is_superuser %}
-        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label"> Import Leads</span></a>
-        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label"> Employees</span></a>
-        {% endif %}
-        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label"> Logout</span></a>
-    </div>
-</div>
-<div class="main" id="main">
-    <div class="topbar">
-        <div class="d-flex align-items-center gap-3">
-            <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-            <strong style="font-size:18px;">{{ title }}</strong>
-        </div>
-        <div class="admin-box">
-            <i class="fa-regular fa-bell fs-5 text-muted"></i>
-            <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
-            <div><strong style="font-size:14px;">{{ request.user.username }}</strong><br><small class="text-muted">Admin</small></div>
-        </div>
-    </div>
-    <div class="content">
-        <div class="page-header">
-            <div>
-                <h2>{{ title }}</h2>
-                <p class="text-muted mb-0" style="font-size:13px;">Fill in the details to create a quote</p>
-            </div>
-            <a href="/quotes/" class="btn-cancel"><i class="fa-solid fa-arrow-left"></i> Back to Quotes</a>
-        </div>
-        <div class="panel">
-            <form method="POST">{% csrf_token %}
-                <div class="row g-3">
-                    <div class="col-md-6"><label>Lead</label><select name="lead" class="form-select" required><option value="">-- Select Lead --</option>{% for l in leads %}<option value="{{ l.id }}" {% if quote.lead_id == l.id %}selected{% endif %}>{{ l.name }}</option>{% endfor %}</select></div>
-                    <div class="col-md-6"><label>Amount (₹)</label><input type="number" name="amount" class="form-control" placeholder="e.g. 250000" value="{{ quote.amount|default:'' }}" required></div>
-                </div>
-                <div class="row g-3 mt-1">
-                    <div class="col-md-6"><label>Status</label><select name="status" class="form-select"><option {% if quote.status == "Draft" %}selected{% endif %}>Draft</option><option {% if quote.status == "Sent" %}selected{% endif %}>Sent</option><option {% if quote.status == "Accepted" %}selected{% endif %}>Accepted</option><option {% if quote.status == "Rejected" %}selected{% endif %}>Rejected</option></select></div>
-                </div>
-                <div class="row g-3 mt-1">
-                    <div class="col-12"><label>Notes</label><textarea name="notes" class="form-control" rows="3" placeholder="Any notes about this quote...">{{ quote.notes|default:'' }}</textarea></div>
-                </div>
-                <div class="row g-3 mt-1">
-                    <div class="col-12 d-flex gap-3 flex-wrap">
-                        <button type="submit" class="btn-save"><i class="fa-solid fa-plus"></i> Save Quote</button>
-                        <a href="/quotes/" class="btn-cancel">Cancel</a>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-function toggleSidebar(){
-    const sidebar = document.getElementById('sidebar');
-    const main = document.getElementById('main');
-    const overlay = document.getElementById('sidebarOverlay');
+.subsidy-row .value {
+    color: #6ee7b7;
+}
 
-    if(window.innerWidth <= 768){
-        sidebar.classList.toggle('mobile-open');
-        overlay.classList.toggle('show');
-    }else{
-        sidebar.classList.toggle('collapsed');
-        main.classList.toggle('expanded');
+.subsidy-card {
+    background: linear-gradient(135deg, #f0fdf4, #eff6ff);
+    border: 1.5px solid #86efac;
+}
+
+.subsidy-toggle-row,
+.gst-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.subsidy-toggle-row label {
+    font-weight: 700;
+    font-size: 15px;
+    color: #15803d;
+}
+
+.subsidy-details {
+    margin-top: 16px;
+    display: none;
+}
+
+.subsidy-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.subsidy-info-item {
+    background: white;
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: center;
+    border: 1px solid #d1fae5;
+}
+
+.si-label {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.si-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: #15803d;
+}
+
+.gst-card {
+    background: linear-gradient(135deg, #fffbeb, #fef9c3);
+    border: 1.5px solid #fde047;
+}
+
+.gst-toggle-row label {
+    font-weight: 700;
+    font-size: 15px;
+    color: #92400e;
+}
+
+@media (max-width: 768px) {
+    .product-row {
+        grid-template-columns: 1fr;
+    }
+
+    .product-row-header {
+        display: none;
+    }
+
+    .subsidy-info-grid {
+        grid-template-columns: 1fr 1fr;
     }
 }
+</style>
+{% endblock %}
 
-function closeSidebar(){
-    document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('sidebarOverlay').classList.remove('show');
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>{{ title }}</h2>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            {% if quote %}
+                Update quote details below
+            {% else %}
+                Fill in the details to generate a professional quote
+            {% endif %}
+        </p>
+    </div>
+
+    <a href="/quotes/" class="btn-back">
+        <i class="fa-solid fa-arrow-left"></i>
+        Back to Quotes
+    </a>
+</div>
+
+<form method="POST" id="quoteForm">
+    {% csrf_token %}
+
+    <div class="form-card">
+        <div class="form-section-title">
+            <i class="fa-solid fa-circle-info"></i>
+            Quote Information
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Lead <span class="text-danger">*</span></label>
+                <select name="lead" class="form-select" required>
+                    <option value="">-- Select Lead --</option>
+                    {% for l in leads %}
+                    <option value="{{ l.id }}" {% if quote.lead_id == l.id %}selected{% endif %}>
+                        {{ l.name }} — {{ l.phone }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="Draft" {% if quote.status == "Draft" %}selected{% endif %}>📝 Draft</option>
+                    <option value="Sent" {% if quote.status == "Sent" %}selected{% endif %}>📤 Sent</option>
+                    <option value="Accepted" {% if quote.status == "Accepted" %}selected{% endif %}>✅ Accepted</option>
+                    <option value="Rejected" {% if quote.status == "Rejected" %}selected{% endif %}>❌ Rejected</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">System Size kW</label>
+                <input type="number" name="system_kw" id="system_kw" class="form-control"
+                       step="0.1" min="0"
+                       value="{{ quote.system_kw|default:'' }}"
+                       oninput="recalcSubsidy()">
+            </div>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <div class="form-section-title">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            Products / Line Items
+        </div>
+
+        <div class="product-row-header">
+            <span>Product</span>
+            <span>Qty</span>
+            <span>Unit Price ₹</span>
+            <span>GST %</span>
+            <span>Line Total ₹</span>
+            <span></span>
+        </div>
+
+        <div id="productRowsContainer">
+            {% if quote and quote.quote_items.exists %}
+                {% for item in quote.quote_items.all %}
+                <div class="product-row" data-row>
+                    <select name="product_id[]" onchange="onProductChange(this)">
+                        <option value="">-- Select Product --</option>
+                        {% for p in products %}
+                        <option value="{{ p.id }}"
+                                data-price="{{ p.price }}"
+                                data-unit="{{ p.unit }}"
+                                data-hsn="{{ p.hsn_code }}"
+                                {% if item.product_id == p.id %}selected{% endif %}>
+                            {{ p.name }}{% if p.brand %} ({{ p.brand }}){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <input type="number" name="product_qty[]" min="1" value="{{ item.quantity }}" oninput="recalcRow(this)">
+                    <input type="number" name="product_price[]" step="0.01" value="{{ item.unit_price }}" oninput="recalcRow(this)">
+                    <input type="number" name="product_gst[]" min="0" max="100" value="{{ item.gst_percent|default:12 }}" oninput="recalcRow(this)">
+                    <input type="text" name="product_total[]" readonly value="{{ item.line_total }}">
+
+                    <button type="button" class="remove-row-btn" onclick="removeRow(this)">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <button type="button" class="add-product-btn" onclick="addProductRow()">
+            <i class="fa-solid fa-plus"></i>
+            Add Product
+        </button>
+
+        <div style="margin-top:18px;padding-top:16px;border-top:1px solid #f1f5f9;">
+            <label class="form-label">Manual Amount Override ₹</label>
+            <input type="number" name="manual_amount" id="manual_amount"
+                   class="form-control"
+                   style="max-width:220px;"
+                   placeholder="Leave blank to use product total"
+                   value="{{ quote.manual_amount|default:'' }}"
+                   oninput="recalcAll()">
+        </div>
+    </div>
+
+    <div class="form-card gst-card">
+        <div class="gst-toggle-row">
+            <label>
+                <i class="fa-solid fa-percent"></i>
+                Apply GST on Total
+            </label>
+
+            <div class="d-flex align-items-center gap-3">
+                <input class="form-check-input" type="checkbox" name="apply_gst" id="applyGst"
+                       {% if quote.apply_gst %}checked{% endif %}
+                       onchange="recalcAll()">
+
+                <select name="gst_rate" id="gst_rate" class="form-select" style="width:120px;" onchange="recalcAll()">
+                    <option value="5" {% if quote.gst_rate == 5 %}selected{% endif %}>5% GST</option>
+                    <option value="12" {% if quote.gst_rate == 12 %}selected{% endif %}>12% GST</option>
+                    <option value="18" {% if quote.gst_rate == 18 %}selected{% endif %}>18% GST</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <div class="form-section-title">
+            <i class="fa-solid fa-tag"></i>
+            Discount
+        </div>
+
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Discount %</label>
+                <input type="number" name="discount_percent" id="discount_percent"
+                       class="form-control"
+                       min="0" max="100" step="0.1"
+                       value="{{ quote.discount_percent|default:'' }}"
+                       oninput="recalcAll()">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Discount Amount ₹</label>
+                <input type="text" id="discount_amount_display" class="form-control" readonly>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-card subsidy-card">
+        <div class="subsidy-toggle-row">
+            <label>
+                <i class="fa-solid fa-building-columns"></i>
+                Central Govt Residential Subsidy
+            </label>
+
+            <input class="form-check-input" type="checkbox" name="apply_subsidy" id="applySubsidy"
+                   {% if quote.apply_subsidy %}checked{% endif %}
+                   onchange="toggleSubsidy(); recalcAll();">
+        </div>
+
+        <div class="subsidy-details" id="subsidyDetails">
+            <div class="subsidy-info-grid">
+                <div class="subsidy-info-item">
+                    <div class="si-label">System Size</div>
+                    <div class="si-value" id="sub_kw_display">—</div>
+                </div>
+
+                <div class="subsidy-info-item">
+                    <div class="si-label">Subsidy Rate</div>
+                    <div class="si-value" id="sub_rate_display">—</div>
+                </div>
+
+                <div class="subsidy-info-item">
+                    <div class="si-label">Total Subsidy</div>
+                    <div class="si-value" id="sub_amount_display">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <div class="form-section-title">
+            <i class="fa-solid fa-note-sticky"></i>
+            Notes
+        </div>
+
+        <textarea name="notes" class="form-control">{{ quote.notes|default:'' }}</textarea>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <input type="hidden" name="subtotal" id="h_subtotal">
+            <input type="hidden" name="discount_amount" id="h_discount">
+            <input type="hidden" name="gst_amount" id="h_gst">
+            <input type="hidden" name="subsidy_amount" id="h_subsidy">
+            <input type="hidden" name="final_amount" id="h_final">
+            <input type="hidden" name="amount" id="h_amount">
+
+            <div class="d-flex gap-3 flex-wrap">
+                <button type="submit" class="btn-save {% if quote %}edit{% endif %}">
+                    <i class="fa-solid {% if quote %}fa-pen{% else %}fa-file-invoice{% endif %}"></i>
+                    {% if quote %}Update Quote{% else %}Generate Quote{% endif %}
+                </button>
+
+                <a href="/quotes/" class="btn-cancel">Cancel</a>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="summary-box">
+                <div class="summary-row">
+                    <span class="label">Subtotal</span>
+                    <span class="value" id="sum_subtotal">₹0</span>
+                </div>
+
+                <div class="summary-row discount-row">
+                    <span class="label">Discount</span>
+                    <span class="value" id="sum_discount">— ₹0</span>
+                </div>
+
+                <div class="summary-row">
+                    <span class="label">GST</span>
+                    <span class="value" id="sum_gst">₹0</span>
+                </div>
+
+                <div class="summary-row subsidy-row">
+                    <span class="label">Central Subsidy</span>
+                    <span class="value" id="sum_subsidy">— ₹0</span>
+                </div>
+
+                <div class="summary-row total-row">
+                    <span class="label">💰 Final Amount</span>
+                    <span class="value" id="sum_final">₹0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const PRODUCTS = [
+    {% for p in products %}
+    {
+        id: {{ p.id }},
+        name: "{{ p.name|escapejs }}",
+        brand: "{{ p.brand|default:''|escapejs }}",
+        price: {{ p.price }},
+        unit: "{{ p.unit|escapejs }}",
+        hsn: "{{ p.hsn_code|default:''|escapejs }}"
+    },
+    {% endfor %}
+];
+
+function buildProductOptions(selectedId = null) {
+    let html = '<option value="">-- Select Product --</option>';
+
+    PRODUCTS.forEach(p => {
+        const sel = selectedId == p.id ? 'selected' : '';
+
+        html += `<option value="${p.id}" data-price="${p.price}" data-unit="${p.unit}" data-hsn="${p.hsn}" ${sel}>
+            ${p.name}${p.brand ? ' (' + p.brand + ')' : ''}
+        </option>`;
+    });
+
+    return html;
 }
-document.querySelectorAll('input[type="text"], textarea').forEach(el => {
-    el.addEventListener('input', function() { let p=this.selectionStart; this.value=this.value.charAt(0).toUpperCase()+this.value.slice(1); this.setSelectionRange(p,p); });
+
+function addProductRow() {
+    const container = document.getElementById('productRowsContainer');
+
+    const div = document.createElement('div');
+    div.className = 'product-row';
+    div.setAttribute('data-row', '');
+
+    div.innerHTML = `
+        <select name="product_id[]" onchange="onProductChange(this)">
+            ${buildProductOptions()}
+        </select>
+        <input type="number" name="product_qty[]" min="1" value="1" oninput="recalcRow(this)">
+        <input type="number" name="product_price[]" step="0.01" oninput="recalcRow(this)">
+        <input type="number" name="product_gst[]" min="0" max="100" value="12" oninput="recalcRow(this)">
+        <input type="text" name="product_total[]" readonly>
+        <button type="button" class="remove-row-btn" onclick="removeRow(this)">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+    `;
+
+    container.appendChild(div);
+}
+
+function removeRow(btn) {
+    btn.closest('[data-row]').remove();
+    recalcAll();
+}
+
+function onProductChange(select) {
+    const opt = select.options[select.selectedIndex];
+    const row = select.closest('[data-row]');
+
+    if (opt && opt.value) {
+        row.querySelector('input[name="product_price[]"]').value = opt.dataset.price || '';
+    }
+
+    recalcRow(select);
+}
+
+function recalcRow(el) {
+    const row = el.closest('[data-row]');
+
+    if (!row) {
+        recalcAll();
+        return;
+    }
+
+    const qty = parseFloat(row.querySelector('input[name="product_qty[]"]').value) || 0;
+    const price = parseFloat(row.querySelector('input[name="product_price[]"]').value) || 0;
+    const gst = parseFloat(row.querySelector('input[name="product_gst[]"]').value) || 0;
+
+    const lineBase = qty * price;
+    const lineGst = lineBase * gst / 100;
+    const lineTotal = lineBase + lineGst;
+
+    row.querySelector('input[name="product_total[]"]').value = lineTotal.toFixed(2);
+
+    recalcAll();
+}
+
+function recalcAll() {
+    let productSubtotal = 0;
+
+    document.querySelectorAll('[data-row]').forEach(row => {
+        const t = parseFloat(row.querySelector('input[name="product_total[]"]').value) || 0;
+        productSubtotal += t;
+    });
+
+    const manual = parseFloat(document.getElementById('manual_amount').value) || 0;
+    const subtotal = manual > 0 ? manual : productSubtotal;
+
+    const discPct = parseFloat(document.getElementById('discount_percent').value) || 0;
+    const discAmt = subtotal * discPct / 100;
+    const afterDiscount = subtotal - discAmt;
+
+    const applyGst = document.getElementById('applyGst').checked;
+    const gstRate = parseFloat(document.getElementById('gst_rate').value) || 12;
+    const gstAmt = applyGst ? afterDiscount * gstRate / 100 : 0;
+    const afterGst = afterDiscount + gstAmt;
+
+    const applySubsidy = document.getElementById('applySubsidy').checked;
+    const kw = parseFloat(document.getElementById('system_kw').value) || 0;
+
+    let subsidyAmt = 0;
+
+    if (applySubsidy && kw > 0) {
+        if (kw <= 3) {
+            subsidyAmt = kw * 18000;
+        } else {
+            subsidyAmt = (3 * 18000) + ((kw - 3) * 9000);
+        }
+    }
+
+    const final = Math.max(0, afterGst - subsidyAmt);
+
+    document.getElementById('sum_subtotal').textContent = '₹' + fmt(subtotal);
+    document.getElementById('sum_discount').textContent = '— ₹' + fmt(discAmt);
+    document.getElementById('sum_gst').textContent = '₹' + fmt(gstAmt);
+    document.getElementById('sum_subsidy').textContent = '— ₹' + fmt(subsidyAmt);
+    document.getElementById('sum_final').textContent = '₹' + fmt(final);
+    document.getElementById('discount_amount_display').value = '₹' + fmt(discAmt);
+
+    if (applySubsidy && kw > 0) {
+        const rateStr = kw <= 3 ? '₹18,000/kW' : '₹18,000/kW ≤3kW + ₹9,000/kW >3kW';
+
+        document.getElementById('sub_kw_display').textContent = kw + ' kW';
+        document.getElementById('sub_rate_display').textContent = rateStr;
+        document.getElementById('sub_amount_display').textContent = '₹' + fmt(subsidyAmt);
+    }
+
+    document.getElementById('h_subtotal').value = subtotal.toFixed(2);
+    document.getElementById('h_discount').value = discAmt.toFixed(2);
+    document.getElementById('h_gst').value = gstAmt.toFixed(2);
+    document.getElementById('h_subsidy').value = subsidyAmt.toFixed(2);
+    document.getElementById('h_final').value = final.toFixed(2);
+    document.getElementById('h_amount').value = final.toFixed(2);
+}
+
+function fmt(n) {
+    return parseFloat(n).toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function toggleSubsidy() {
+    const details = document.getElementById('subsidyDetails');
+    details.style.display = document.getElementById('applySubsidy').checked ? 'block' : 'none';
+    recalcSubsidy();
+}
+
+function recalcSubsidy() {
+    recalcAll();
+}
+
+window.addEventListener('load', function() {
+    if (document.getElementById('applySubsidy').checked) {
+        document.getElementById('subsidyDetails').style.display = 'block';
+    }
+
+    document.querySelectorAll('[data-row]').forEach(row => {
+        recalcRow(row.querySelector('input[name="product_qty[]"]'));
+    });
+
+    recalcAll();
+});
+
+document.querySelectorAll('input[type="text"]:not([readonly]), textarea').forEach(el => {
+    el.addEventListener('input', function() {
+        let pos = this.selectionStart;
+        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+        this.setSelectionRange(pos, pos);
+    });
 });
 </script>
-</body>
-</html>
+{% endblock %}

@@ -109,7 +109,17 @@ class Quote(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Draft')
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at       = models.DateTimeField(auto_now_add=True)
+    system_kw        = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    discount_amount  = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    gst_rate         = models.IntegerField(default=12)
+    gst_amount       = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    apply_gst        = models.BooleanField(default=False)
+    apply_subsidy    = models.BooleanField(default=False)
+    subsidy_amount   = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    final_amount     = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    manual_amount    = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return f"Quote #{self.id} - {self.lead.name}"
@@ -358,14 +368,15 @@ class Ticket(models.Model):
         ordering = ['-created_at']
 
 
+# ✅ CORRECT — __str__ must align with the field definitions above it
 class TicketStats(models.Model):
     customer = models.OneToOneField(
-        'Customer',                      # ← just 'Customer' since it's the same models.py
+        'Customer',
         on_delete=models.CASCADE,
         related_name='ticket_stats'
     )
     total_raised = models.PositiveIntegerField(default=0)
     total_solved = models.PositiveIntegerField(default=0)
 
-    def __str__(self):
+    def __str__(self):              # ← 4 spaces only, same level as fields
         return f"Stats for {self.customer}"

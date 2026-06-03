@@ -1,381 +1,399 @@
-<html>
-<head>
-    <title>{{ title }} - Solar CRM</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
-        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease, transform 0.3s ease; z-index: 1100; }
-        .sidebar.collapsed { width: 68px; } .sidebar.collapsed .menu-label, .sidebar.collapsed .brand-text { display: none; } .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
-        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; }
-        .brand span { color: #f59e0b; }
-        .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
-        .menu a i { flex-shrink: 0; width: 20px; text-align: center; }
-        .menu a.active, .menu a:hover { background: #2563eb; color: white; }
-        .menu a:hover { transform: translateX(3px); }
-        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; }
-        .main.expanded { margin-left: 68px; }
-        .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999; }
-        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; transition: background 0.2s, transform 0.15s; }
-        .hamburger:hover { background: #f1f5f9; transform: scale(1.08); }
-        .admin-box { display: flex; align-items: center; gap: 12px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
-        .content { padding: 28px 24px; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
-        .page-header h2 { font-weight: 800; margin-bottom: 4px; font-size: 26px; }
-        .form-card { background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 36px; max-width: 900px; box-shadow: 0 4px 24px rgba(37,99,235,0.07); animation: cardSlideIn 0.45s cubic-bezier(0.22,1,0.36,1) both; }
-        @keyframes cardSlideIn { from { opacity: 0; transform: translateY(32px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .form-card .row, .form-card .mt-3, .form-card .form-section-title, .form-card .d-flex { animation: fadeUp 0.4s ease both; }
-        .form-card .row:nth-child(1){animation-delay:0.08s;} .form-card .row:nth-child(2){animation-delay:0.14s;} .form-card .row:nth-child(3){animation-delay:0.20s;} .form-card .row:nth-child(4){animation-delay:0.26s;} .form-card .row:nth-child(5){animation-delay:0.32s;} .form-card .d-flex{animation-delay:0.38s;}
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-        .form-label { font-weight: 600; font-size: 14px; color: #374151; margin-bottom: 6px; }
-        .form-control, .form-select { border: 1px solid #dbe3ef; border-radius: 10px; padding: 11px 14px; font-size: 15px; color: #111827; background: #f9fafb; transition: border 0.2s, box-shadow 0.2s, background 0.2s, transform 0.15s; }
-        .form-control:hover, .form-select:hover { border-color: #93c5fd; transform: translateY(-1px); }
-        .form-control:focus, .form-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); background: white; outline: none; transform: translateY(-1px); }
-        textarea.form-control { resize: vertical; min-height: 90px; }
-        .form-section-title { font-size: 12px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin: 22px 0 14px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
-        .btn-submit { background: #2563eb; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
-        .btn-submit:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.30); }
-        .btn-submit.edit { background: #f97316; }
-        .btn-submit.edit:hover { background: #ea6c00; box-shadow: 0 6px 20px rgba(249,115,22,0.30); }
-        .btn-back { background: white; color: #374151; border: 1px solid #dbe3ef; padding: 12px 20px; border-radius: 10px; font-size: 15px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
-        .btn-back:hover { background: #f1f5f9; color: #111827; transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+{% extends 'base.html' %}
 
-        /* Product rows */
-        .product-row { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; animation: fadeUp 0.3s ease both; }
-        .product-row select, .product-row input { flex: 1; border: 1px solid #dbe3ef; border-radius: 8px; padding: 9px 12px; font-size: 14px; background: white; }
-        .product-row select:focus, .product-row input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
-        .remove-row-btn { background: #fee2e2; color: #b91c1c; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 14px; transition: background 0.2s, transform 0.15s; flex-shrink: 0; }
-        .remove-row-btn:hover { background: #fca5a5; transform: scale(1.08); }
-        .add-product-row-btn { background: #eff6ff; color: #2563eb; border: 1.5px dashed #bfdbfe; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 6px; transition: background 0.2s, transform 0.15s; }
-        .add-product-row-btn:hover { background: #dbeafe; transform: translateY(-1px); }
-        .stock-warn { font-size: 11px; color: #f59e0b; font-weight: 600; margin-top: 3px; display: none; }
+{% block title %}{{ title }} - Solar CRM{% endblock %}
+{% block nav_projects %}class="active"{% endblock %}
 
-        /* In Progress notice */
-        .inprogress-notice { background: linear-gradient(135deg, #fef9c3, #fefce8); border: 1.5px solid #fde047; border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #78350f; margin-bottom: 14px; display: none; }
-        .inprogress-notice i { color: #f59e0b; }
+{% block extra_css %}
+<style>
+.product-row {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-        .footer { text-align: center; padding: 20px; color: #64748b; border-top: 1px solid #e5e7eb; background: white; margin-top: 24px; font-size: 13px; }
-        
-        
+.product-row select,
+.product-row input {
+    flex: 1;
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 14px;
+    background: white;
+}
 
-        /* ===== MOBILE RESPONSIVE ONLY ===== */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1050;
-        }
+.product-row select:focus,
+.product-row input:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+}
 
-        .sidebar-overlay.show {
-            display: block;
-        }
+.remove-row-btn {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s, transform 0.15s;
+    flex-shrink: 0;
+}
 
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                width: 245px !important;
-                transition: transform 0.3s ease;
-                z-index: 1100;
-            }
+.remove-row-btn:hover {
+    background: #fca5a5;
+    transform: scale(1.08);
+}
 
-            .sidebar.mobile-open {
-                transform: translateX(0);
-            }
+.add-product-row-btn {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1.5px dashed #bfdbfe;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 6px;
+    transition: background 0.2s, transform 0.15s;
+}
 
-            .main {
-                margin-left: 0 !important;
-            }
+.add-product-row-btn:hover {
+    background: #dbeafe;
+    transform: translateY(-1px);
+}
 
-            .topbar {
-                padding: 0 14px;
-            }
+.stock-warn {
+    font-size: 11px;
+    color: #f59e0b;
+    font-weight: 600;
+    margin-top: 3px;
+    display: none;
+}
 
-            .content {
-                padding: 14px;
-            }
+.inprogress-notice {
+    background: linear-gradient(135deg, #fef9c3, #fefce8);
+    border: 1.5px solid #fde047;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #78350f;
+    margin-bottom: 14px;
+    display: none;
+}
 
-            .form-card {
-                padding: 20px 16px;
-                max-width: 100%;
-            }
+.inprogress-notice i {
+    color: #f59e0b;
+}
 
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
+@media (max-width: 768px) {
+    .product-row {
+        flex-wrap: wrap;
+    }
 
-            .admin-box strong,
-            .admin-box small {
-                display: none;
-            }
+    .product-row select,
+    .product-row input {
+        max-width: 100% !important;
+        width: 100%;
+        flex: 1 1 100%;
+    }
 
-            .btn-submit,
-            .btn-back {
-                width: 100%;
-                justify-content: center;
-            }
+    .remove-row-btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
 
-            .product-row {
-                flex-wrap: wrap;
-            }
+{% block content %}
 
-            .product-row select,
-            .product-row input {
-                max-width: 100% !important;
-                width: 100%;
-                flex: 1 1 100%;
-            }
-
-            .remove-row-btn {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .d-flex.gap-3 {
-                flex-wrap: wrap;
-            }
-
-            .footer {
-                font-size: 12px;
-            }
-        }
-
-    </style>
-</head>
-<body>
-
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-
-<div class="sidebar" id="sidebar">
-    <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
-    <div class="menu">
-        <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label"> Dashboard</span></a>
-        <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label"> Leads</span></a>
-        <a href="/followups/"><i class="fa-solid fa-phone"></i><span class="menu-label"> Follow Ups</span></a>
-        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label"> Customers</span></a>
-         <a href="/site-surveys/"><i class="fa-solid fa-map-location-dot"></i><span class="menu-label">Site Surveys</span></a>
-        <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
-        <a href="/projects/" class="active"><i class="fa-solid fa-solar-panel"></i><span class="menu-label"> Projects</span></a>
-        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label"> Quotes</span></a>
-        {% if request.user.is_superuser %}
-        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label"> Invoices</span></a>
-        {% endif %}
-        <a href="/tickets/"><i class="fa-solid fa-ticket"></i><span class="menu-label"> Tickets</span></a>
-        {% if request.user.is_superuser %}
-        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label"> Import Leads</span></a>
-        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label"> Employees</span></a>
-        {% endif %}
-        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label"> Logout</span></a>
+<div class="page-header">
+    <div>
+        <h2>{{ title }}</h2>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            {% if project %}
+                Update project details
+            {% else %}
+                Fill in the details to create a new project
+            {% endif %}
+        </p>
     </div>
+
+    <a href="/projects/" class="btn-back">
+        <i class="fa-solid fa-arrow-left"></i>
+        Back to Projects
+    </a>
 </div>
 
-<div class="main" id="main">
-    <div class="topbar">
-        <div class="d-flex align-items-center gap-3">
-            <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-            <strong style="font-size:18px;">{{ title }}</strong>
-        </div>
-        <div class="admin-box">
-            <i class="fa-regular fa-bell fs-5 text-muted"></i>
-            <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
-            <div><strong style="font-size:14px;">{{ request.user.username }}</strong><br>
-            <small class="text-muted">{% if request.user.is_superuser %}Admin{% else %}Employee{% endif %}</small></div>
-        </div>
-    </div>
+<div class="form-card">
+    <form method="POST" id="projectForm">
+        {% csrf_token %}
 
-    <div class="content">
-        <div class="page-header">
-            <div>
-                <h2>{{ title }}</h2>
-                <p class="text-muted mb-0" style="font-size:13px;">
-                    {% if project %}Update project details{% else %}Fill in the details to create a new project{% endif %}
-                </p>
+        <div class="form-section-title">
+            Project Information
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label class="form-label">
+                    Project Title <span class="text-danger">*</span>
+                </label>
+
+                <input type="text"
+                       name="title"
+                       class="form-control"
+                       placeholder="e.g. Rooftop Solar 5kW — Ramesh Patel"
+                       value="{{ project.title|default:'' }}"
+                       required>
             </div>
-            <a href="/projects/" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Projects</a>
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    Status
+                </label>
+
+                <select name="status"
+                        class="form-select"
+                        id="statusSelect"
+                        onchange="onStatusChange(this.value)">
+                    <option value="Planning" {% if project.status == "Planning" %}selected{% endif %}>📋 Planning</option>
+                    <option value="In Progress" {% if project.status == "In Progress" %}selected{% endif %}>🔧 In Progress</option>
+                    <option value="Completed" {% if project.status == "Completed" %}selected{% endif %}>✅ Completed</option>
+                    <option value="On Hold" {% if project.status == "On Hold" %}selected{% endif %}>⏸️ On Hold</option>
+                </select>
+            </div>
         </div>
 
-        <div class="form-card">
-            <form method="POST" id="projectForm">
-                {% csrf_token %}
+        <div class="row g-3 mt-1">
+            <div class="col-md-6">
+                <label class="form-label">
+                    Customer <span class="text-danger">*</span>
+                </label>
 
-                <!-- ── Basic Info ── -->
-                <div class="form-section-title">Project Information</div>
-                <div class="row g-3">
-                    <div class="col-md-8">
-                        <label class="form-label">Project Title <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" placeholder="e.g. Rooftop Solar 5kW — Ramesh Patel" value="{{ project.title|default:'' }}" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Status</label>
-                        <select name="status" class="form-select" id="statusSelect" onchange="onStatusChange(this.value)">
-                            <option value="Planning"    {% if project.status == "Planning" %}selected{% endif %}>📋 Planning</option>
-                            <option value="In Progress" {% if project.status == "In Progress" %}selected{% endif %}>🔧 In Progress</option>
-                            <option value="Completed"   {% if project.status == "Completed" %}selected{% endif %}>✅ Completed</option>
-                            <option value="On Hold"     {% if project.status == "On Hold" %}selected{% endif %}>⏸️ On Hold</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row g-3 mt-1">
-                    <div class="col-md-6">
-                        <label class="form-label">Customer <span class="text-danger">*</span></label>
-                        <select name="customer" class="form-select" required>
-                            <option value="">-- Select Customer --</option>
-                            {% for c in customers %}
-                            <option value="{{ c.id }}" {% if project.customer_id == c.id %}selected{% endif %}>{{ c.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Start Date</label>
-                        <input type="date" name="start_date" class="form-control" value="{{ project.start_date|default:'' }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">End Date</label>
-                        <input type="date" name="end_date" class="form-control" value="{{ project.end_date|default:'' }}">
-                    </div>
-                </div>
-                <div class="row g-3 mt-1">
-                    <div class="col-12">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control" placeholder="Project details, site info, special notes...">{{ project.description|default:'' }}</textarea>
-                    </div>
-                </div>
+                <select name="customer" class="form-select" required>
+                    <option value="">-- Select Customer --</option>
 
-                <!-- ── Products Used ── -->
-                <div class="form-section-title">Products Used in This Project</div>
+                    {% for c in customers %}
+                    <option value="{{ c.id }}"
+                        {% if project.customer_id == c.id %}selected{% endif %}>
+                        {{ c.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                <!-- Warning shown when status = In Progress -->
-                <div class="inprogress-notice" id="inProgressNotice">
-                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                    <strong>Status is "In Progress"</strong> — stock will be <strong>automatically deducted</strong> from inventory when you save this project.
-                </div>
+            <div class="col-md-3">
+                <label class="form-label">Start Date</label>
 
-                <div id="productRowsContainer">
-                    {% if project %}
-                        {% for pp in project.project_products.all %}
-                        <div class="product-row" data-row>
-                            <select name="product_id[]" class="form-select" onchange="checkStock(this)" style="max-width:320px;">
-                                <option value="">-- Select Product --</option>
-                                {% for prod in products %}
-                                <option value="{{ prod.id }}"
-                                    data-stock="{{ prod.quantity }}"
-                                    data-unit="{{ prod.unit }}"
-                                    {% if pp.product_id == prod.id %}selected{% endif %}>
-                                    {{ prod.name }} {% if prod.brand %}({{ prod.brand }}){% endif %} — Stock: {{ prod.quantity }} {{ prod.unit }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <input type="number" name="product_qty[]" placeholder="Qty" min="1" value="{{ pp.quantity_used }}" style="max-width:100px;" onchange="checkStock(this.closest('[data-row]').querySelector('select'))">
-                            <div style="flex:1;">
-                                <div class="stock-warn" id="warn-inline">⚠️ Insufficient stock!</div>
-                            </div>
-                            <button type="button" class="remove-row-btn" onclick="removeRow(this)"><i class="fa-solid fa-trash"></i></button>
-                        </div>
+                <input type="date"
+                       name="start_date"
+                       class="form-control"
+                       value="{{ project.start_date|date:'Y-m-d' }}">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">End Date</label>
+
+                <input type="date"
+                       name="end_date"
+                       class="form-control"
+                       value="{{ project.end_date|date:'Y-m-d' }}">
+            </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+            <div class="col-12">
+                <label class="form-label">Description</label>
+
+                <textarea name="description"
+                          class="form-control"
+                          placeholder="Project details, site info, special notes...">{{ project.description|default:'' }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-section-title">
+            Products Used in This Project
+        </div>
+
+        <div class="inprogress-notice" id="inProgressNotice">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+            <strong>Status is "In Progress"</strong>
+            — stock will be <strong>automatically deducted</strong>
+            from inventory when you save this project.
+        </div>
+
+        <div id="productRowsContainer">
+            {% if project %}
+                {% for pp in project.project_products.all %}
+                <div class="product-row" data-row>
+                    <select name="product_id[]"
+                            class="form-select"
+                            onchange="checkStock(this)"
+                            style="max-width:320px;">
+
+                        <option value="">-- Select Product --</option>
+
+                        {% for prod in products %}
+                        <option value="{{ prod.id }}"
+                                data-stock="{{ prod.quantity }}"
+                                data-unit="{{ prod.unit }}"
+                                {% if pp.product_id == prod.id %}selected{% endif %}>
+                            {{ prod.name }}
+                            {% if prod.brand %}({{ prod.brand }}){% endif %}
+                            — Stock: {{ prod.quantity }} {{ prod.unit }}
+                        </option>
                         {% endfor %}
-                    {% endif %}
-                </div>
-                <button type="button" class="add-product-row-btn" onclick="addProductRow()">
-                    <i class="fa-solid fa-plus"></i> Add Product
-                </button>
+                    </select>
 
-                <!-- ── Buttons ── -->
-                <div class="d-flex gap-3 mt-4 align-items-center flex-wrap">
-                    <button type="submit" class="btn-submit {% if project %}edit{% endif %}">
-                        <i class="fa-solid {% if project %}fa-pen{% else %}fa-plus{% endif %}"></i>
-                        {% if project %}Update Project{% else %}Save Project{% endif %}
+                    <input type="number"
+                           name="product_qty[]"
+                           placeholder="Qty"
+                           min="1"
+                           value="{{ pp.quantity_used }}"
+                           style="max-width:100px;"
+                           onchange="checkStock(this.closest('[data-row]').querySelector('select'))">
+
+                    <div style="flex:1;">
+                        <div class="stock-warn">
+                            ⚠️ Insufficient stock!
+                        </div>
+                    </div>
+
+                    <button type="button"
+                            class="remove-row-btn"
+                            onclick="removeRow(this)">
+                        <i class="fa-solid fa-trash"></i>
                     </button>
-                    {% if project %}
-                    <a href="/project/{{ project.id }}/" class="btn-back" style="background:#ede9fe;color:#6d28d9;border-color:#ede9fe;">
-                        <i class="fa-solid fa-eye"></i> View Project
-                    </a>
-                    {% endif %}
-                    <a href="/projects/" class="btn-back">Cancel</a>
                 </div>
-
-            </form>
+                {% endfor %}
+            {% endif %}
         </div>
-    </div>
-    <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
+
+        <button type="button"
+                class="add-product-row-btn"
+                onclick="addProductRow()">
+            <i class="fa-solid fa-plus"></i>
+            Add Product
+        </button>
+
+        <div class="d-flex gap-3 mt-4 align-items-center flex-wrap">
+            <button type="submit"
+                    class="btn-save {% if project %}edit{% endif %}">
+                <i class="fa-solid {% if project %}fa-pen{% else %}fa-plus{% endif %}"></i>
+
+                {% if project %}
+                    Update Project
+                {% else %}
+                    Save Project
+                {% endif %}
+            </button>
+
+            {% if project %}
+            <a href="/project/{{ project.id }}/" class="btn-back">
+                <i class="fa-solid fa-eye"></i>
+                View Project
+            </a>
+            {% endif %}
+
+            <a href="/projects/" class="btn-cancel">
+                Cancel
+            </a>
+        </div>
+
+    </form>
 </div>
 
-<!-- Product option template for JS -->
 <select id="productOptionsTemplate" style="display:none;">
     <option value="">-- Select Product --</option>
+
     {% for p in products %}
-    <option value="{{ p.id }}" data-stock="{{ p.quantity }}" data-unit="{{ p.unit|escape }}">
-        {{ p.name }} {% if p.brand %}({{ p.brand }}){% endif %} — Stock: {{ p.quantity }} {{ p.unit }}
+    <option value="{{ p.id }}"
+            data-stock="{{ p.quantity }}"
+            data-unit="{{ p.unit|escape }}">
+        {{ p.name }}
+        {% if p.brand %}({{ p.brand }}){% endif %}
+        — Stock: {{ p.quantity }} {{ p.unit }}
     </option>
     {% endfor %}
 </select>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
-function toggleSidebar(){
-    const sidebar = document.getElementById('sidebar');
-    const main = document.getElementById('main');
-    const overlay = document.getElementById('sidebarOverlay');
-
-    if(window.innerWidth <= 768){
-        sidebar.classList.toggle('mobile-open');
-        overlay.classList.toggle('show');
-    }else{
-        sidebar.classList.toggle('collapsed');
-        main.classList.toggle('expanded');
-    }
-}
-
-function closeSidebar(){
-    document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('sidebarOverlay').classList.remove('show');
-}
-
-function buildProductOptions(){
+function buildProductOptions() {
     return document.getElementById('productOptionsTemplate').innerHTML;
 }
 
-function addProductRow(){
+function addProductRow() {
     const container = document.getElementById('productRowsContainer');
+
     const div = document.createElement('div');
-    div.className = 'product-row'; div.setAttribute('data-row','');
+    div.className = 'product-row';
+    div.setAttribute('data-row', '');
+
     div.innerHTML = `
         <select name="product_id[]" class="form-select" onchange="checkStock(this)" style="max-width:320px;">
             ${buildProductOptions()}
         </select>
-        <input type="number" name="product_qty[]" placeholder="Qty" min="1" style="max-width:100px;" onchange="checkStock(this.closest('[data-row]').querySelector('select'))">
-        <div style="flex:1;"><div class="stock-warn">⚠️ Insufficient stock!</div></div>
-        <button type="button" class="remove-row-btn" onclick="removeRow(this)"><i class="fa-solid fa-trash"></i></button>
+
+        <input type="number"
+               name="product_qty[]"
+               placeholder="Qty"
+               min="1"
+               style="max-width:100px;"
+               onchange="checkStock(this.closest('[data-row]').querySelector('select'))">
+
+        <div style="flex:1;">
+            <div class="stock-warn">⚠️ Insufficient stock!</div>
+        </div>
+
+        <button type="button" class="remove-row-btn" onclick="removeRow(this)">
+            <i class="fa-solid fa-trash"></i>
+        </button>
     `;
+
     container.appendChild(div);
 }
 
-function removeRow(btn){ btn.closest('[data-row]').remove(); }
+function removeRow(btn) {
+    btn.closest('[data-row]').remove();
+}
 
-function checkStock(select){
+function checkStock(select) {
     const row = select.closest('[data-row]');
     const warn = row.querySelector('.stock-warn');
     const qtyInput = row.querySelector('input[type="number"]');
     const opt = select.options[select.selectedIndex];
-    if(!opt || !opt.value){ warn.style.display='none'; return; }
+
+    if (!opt || !opt.value) {
+        warn.style.display = 'none';
+        return;
+    }
+
     const stock = parseFloat(opt.dataset.stock);
-    const qty   = parseFloat(qtyInput.value) || 0;
-    warn.style.display = (qty > stock) ? 'block' : 'none';
+    const qty = parseFloat(qtyInput.value) || 0;
+
+    warn.style.display = qty > stock ? 'block' : 'none';
 }
 
-function onStatusChange(val){
+function onStatusChange(val) {
     const notice = document.getElementById('inProgressNotice');
-    notice.style.display = (val === 'In Progress') ? 'block' : 'none';
+    notice.style.display = val === 'In Progress' ? 'block' : 'none';
 }
 
-// On load check current status
-window.addEventListener('load', function(){
+window.addEventListener('load', function() {
     const sel = document.getElementById('statusSelect');
-    if(sel) onStatusChange(sel.value);
+
+    if (sel) {
+        onStatusChange(sel.value);
+    }
 });
 
 document.querySelectorAll('input[type="text"], textarea').forEach(el => {
@@ -386,6 +404,4 @@ document.querySelectorAll('input[type="text"], textarea').forEach(el => {
     });
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}

@@ -1,220 +1,208 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Follow Ups - Solar CRM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
-    <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; background: #f5f8fc; font-family: Arial, sans-serif; color: #111827; }
-        .sidebar { width: 245px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(180deg, #071b36, #0b2547); color: white; padding: 22px 14px; overflow-y: auto; overflow-x: hidden; transition: width 0.3s ease; z-index: 1000; }
-        .sidebar.collapsed { width: 68px; } .sidebar.collapsed .menu-label, .sidebar.collapsed .brand-text { display: none; } .sidebar.collapsed .menu a { justify-content: center; padding: 13px 0; }
-        .brand { font-size: 22px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; } .brand span { color: #f59e0b; }
-        .menu a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 6px; color: #dbeafe; text-decoration: none; border-radius: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; transition: all 0.2s; }
-        .menu a i { flex-shrink: 0; width: 20px; text-align: center; } .menu a.active, .menu a:hover { background: #2563eb; color: white; }
-        .main { margin-left: 245px; min-height: 100vh; transition: margin-left 0.3s ease; } .main.expanded { margin-left: 68px; }
-        .topbar { height: 68px; background: white; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 999; }
-        .hamburger { cursor: pointer; font-size: 20px; color: #374151; background: none; border: none; padding: 6px 10px; border-radius: 8px; } .hamburger:hover { background: #f1f5f9; }
-        .admin-box { display: flex; align-items: center; gap: 12px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
-        .content { padding: 24px; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; } .page-header h2 { font-weight: 800; margin-bottom: 5px; }
-        .add-btn { background: #2563eb; color: white; border: none; padding: 11px 20px; border-radius: 9px; text-decoration: none; font-size: 14px; }
-        .panel { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 22px; }
-        .footer { text-align: center; padding: 24px; color: #64748b; border-top: 1px solid #e5e7eb; background: white; margin-top: 26px; }
-        .status-select { border: none; border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; }
-        .status-pending { background: #fef9c3; color: #854d0e; }
-        .status-done { background: #dcfce7; color: #15803d; }
-        /* Assigned person mini badge */
-        .assigned-badge { display: inline-flex; align-items: center; gap: 5px; background: #eff6ff; color: #1d4ed8; border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
-        .assigned-badge i { font-size: 10px; }
+{% extends 'base.html' %}
 
+{% block title %}Follow Ups - Solar CRM{% endblock %}
+{% block nav_followups %}class="active"{% endblock %}
 
-        /* ===== MOBILE RESPONSIVE FIX ===== */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1050;
-        }
-        .sidebar-overlay.show { display: block; }
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
 
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                width: 245px !important;
-                transition: transform 0.3s ease;
-                z-index: 1100;
-            }
-            .sidebar.mobile-open { transform: translateX(0); }
-            .main { margin-left: 0 !important; }
-            .topbar { padding: 0 14px; }
-            .content { padding: 14px; }
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-            .page-header h2 { font-size: 22px; }
-            .panel {
-                padding: 16px;
-                width: 100%;
-                max-width: 100%;
-            }
-            .table-responsive { overflow-x: auto; }
-            .admin-box strong,
-            .admin-box small { display: none; }
-            .dt-buttons {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-                margin-bottom: 10px;
-            }
-            .dataTables_filter {
-                margin-top: 10px;
-                text-align: left !important;
-            }
-            .dataTables_filter input {
-                width: 100% !important;
-                margin-left: 0 !important;
-                margin-top: 6px;
-            }
-        }
+<style>
+.status-select {
+    border: none;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+}
 
-        @media (max-width: 480px) {
-            .add-btn {
-                width: 100%;
-                text-align: center;
-                justify-content: center;
-                display: inline-flex;
-            }
-            .btn {
-                margin-bottom: 4px;
-            }
-        }
-    </style>
-</head>
-<body>
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-<div class="sidebar" id="sidebar">
-    <div class="brand">☀️ <span class="brand-text"><span>SOLAR</span> CRM</span></div>
-    <div class="menu">
-        <a href="/dashboard/"><i class="fa-solid fa-house"></i><span class="menu-label">Dashboard</span></a>
-        <a href="/leads/"><i class="fa-solid fa-users"></i><span class="menu-label">Leads</span></a>
-        <a href="/followups/" class="active"><i class="fa-solid fa-phone"></i><span class="menu-label">Follow Ups</span></a>
-        <a href="/customers/"><i class="fa-solid fa-user-group"></i><span class="menu-label">Customers</span></a>
-         <a href="/site-surveys/"><i class="fa-solid fa-map-location-dot"></i><span class="menu-label">Site Surveys</span></a>
-         <a href="/products/"><i class="fa-solid fa-boxes-stacked"></i><span class="menu-label"> Products</span></a>
-        <a href="/projects/"><i class="fa-solid fa-solar-panel"></i><span class="menu-label">Projects</span></a>
-        <a href="/quotes/"><i class="fa-solid fa-file-invoice"></i><span class="menu-label">Quotes</span></a>
-        {% if request.user.is_superuser %}
-        <a href="/invoices/"><i class="fa-solid fa-receipt"></i><span class="menu-label"> Invoices</span></a>
-        {% endif %}
-        <a href="/tickets/"><i class="fa-solid fa-ticket"></i><span class="menu-label"> Tickets</span></a>
-        {% if request.user.is_superuser %}
-        <a href="/import/"><i class="fa-solid fa-upload"></i><span class="menu-label"> Import Leads</span></a>
-        <a href="/employees/"><i class="fa-solid fa-user-tie"></i><span class="menu-label"> Employees</span></a>
-        {% endif %}
-        <a href="/logout/"><i class="fa-solid fa-right-from-bracket"></i><span class="menu-label">Logout</span></a>
+.status-pending {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.status-done {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.assigned-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.assigned-badge i {
+    font-size: 10px;
+}
+
+@media (max-width: 768px) {
+    .dt-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+
+    .dataTables_filter {
+        margin-top: 10px;
+        text-align: left !important;
+    }
+
+    .dataTables_filter input {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-top: 6px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>Follow Ups</h2>
+        <p class="text-muted mb-0">Track all scheduled follow ups</p>
     </div>
-</div>
-<div class="main" id="main">
-    <div class="topbar">
-        <div class="d-flex align-items-center gap-3">
-            <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-            <strong style="font-size:18px;">Follow Ups</strong>
-        </div>
-        <div class="admin-box">
-            <i class="fa-regular fa-bell fs-5 text-muted"></i>
-            <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
-            <div><strong style="font-size:14px;">{{ request.user.username }}</strong><br>
-            <small class="text-muted">{% if request.user.is_superuser %}Admin{% else %}Employee{% endif %}</small></div>
-        </div>
-    </div>
-    <div class="content">
-        <div class="page-header">
-            <div><h2>Follow Ups</h2><p class="text-muted mb-0">Track all scheduled follow ups</p></div>
-            {% if request.user.is_superuser %}
-            <a href="/followups/add/" class="add-btn"><i class="fa-solid fa-plus"></i> Add Follow Up</a>
-            {% endif %}
-        </div>
-        {% if messages %}{% for msg in messages %}<div class="alert alert-success alert-dismissible fade show">{{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
-        <div class="panel">
-            {% if followups %}
-            <div class="table-responsive">
-                <table id="dataTable" class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Title</th>
-                            <th>Lead</th>
-                            <th>Assigned To</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Notes</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for f in followups %}
-                        <tr>
-                            <td class="text-muted">{{ forloop.counter }}</td>
-                            <td><strong>{{ f.title }}</strong></td>
-                            <td>{{ f.lead.name }}</td>
-                            <td>
-                                <!-- Shows the employee assigned to this lead -->
-                                {% if f.lead.assigned_to %}
-                                <span class="assigned-badge">
-                                    <i class="fa-solid fa-user-tie"></i>
-                                    {{ f.lead.assigned_to.username }}
-                                </span>
-                                {% else %}
-                                <span class="text-muted" style="font-size:12px;">Unassigned</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ f.follow_up_date }}</td>
-                            <td>{{ f.follow_up_time|default:"—" }}</td>
-                            <td>{{ f.notes|truncatechars:35|default:"—" }}</td>
-                            <td>
-                                <select
-                                    class="status-select {% if f.done %}status-done{% else %}status-pending{% endif %}"
-                                    data-followup-id="{{ f.id }}"
-                                    onchange="changeFollowUpStatus(this.dataset.followupId, this)">
-                                    <option value="pending" {% if not f.done %}selected{% endif %}>⏳ Pending</option>
-                                    <option value="done" {% if f.done %}selected{% endif %}>✅ Done</option>
-                                </select>
-                            </td>
-                            <td>
-                                <a href="/followups/{{ f.id }}/edit/" class="btn btn-sm btn-outline-warning">Edit</a>
-                                <a href="/followups/{{ f.id }}/view/" class="btn btn-sm btn-outline-primary">View</a>
-                                {% if request.user.is_superuser %}
-                                <a href="/followups/{{ f.id }}/delete/" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')">Delete</a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-center py-5">
-                <i class="fa-solid fa-phone fa-3x text-muted mb-3"></i>
-                <p class="text-muted">No follow ups yet.</p>
-                {% if request.user.is_superuser %}<a href="/followups/add/" class="add-btn">+ Add First Follow Up</a>{% endif %}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    <div class="footer">© 2026 Solar CRM. All rights reserved.</div>
+
+    {% if request.user.is_superuser %}
+    <a href="/followups/add/" class="add-btn">
+        <i class="fa-solid fa-plus"></i>
+        Add Follow Up
+    </a>
+    {% endif %}
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<div class="panel">
+
+    {% if followups %}
+    <div class="table-responsive">
+
+        <table id="dataTable" class="table table-hover align-middle mb-0">
+
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Lead</th>
+                    <th>Assigned To</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Notes</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for f in followups %}
+                <tr>
+                    <td class="text-muted">{{ forloop.counter }}</td>
+
+                    <td>
+                        <strong>{{ f.title }}</strong>
+                    </td>
+
+                    <td>
+                        {{ f.lead.name }}
+                    </td>
+
+                    <td>
+                        {% if f.lead.assigned_to %}
+                        <span class="assigned-badge">
+                            <i class="fa-solid fa-user-tie"></i>
+                            {{ f.lead.assigned_to.username }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted" style="font-size:12px;">Unassigned</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ f.follow_up_date }}
+                    </td>
+
+                    <td>
+                        {{ f.follow_up_time|default:"—" }}
+                    </td>
+
+                    <td>
+                        {{ f.notes|truncatechars:35|default:"—" }}
+                    </td>
+
+                    <td>
+                        <select
+                            class="status-select {% if f.done %}status-done{% else %}status-pending{% endif %}"
+                            data-followup-id="{{ f.id }}"
+                            onchange="changeFollowUpStatus(this.dataset.followupId, this)">
+
+                            <option value="pending" {% if not f.done %}selected{% endif %}>
+                                ⏳ Pending
+                            </option>
+
+                            <option value="done" {% if f.done %}selected{% endif %}>
+                                ✅ Done
+                            </option>
+                        </select>
+                    </td>
+
+                    <td>
+                        <a href="/followups/{{ f.id }}/edit/" class="btn btn-sm btn-outline-warning">
+                            Edit
+                        </a>
+
+                        <a href="/followups/{{ f.id }}/view/" class="btn btn-sm btn-outline-primary">
+                            View
+                        </a>
+
+                        {% if request.user.is_superuser %}
+                        <a href="/followups/{{ f.id }}/delete/"
+                           class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Delete?')">
+                            Delete
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="text-center py-5">
+        <i class="fa-solid fa-phone fa-3x text-muted mb-3"></i>
+
+        <p class="text-muted">No follow ups yet.</p>
+
+        {% if request.user.is_superuser %}
+        <a href="/followups/add/" class="add-btn">
+            <i class="fa-solid fa-plus"></i>
+            Add First Follow Up
+        </a>
+        {% endif %}
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
@@ -224,37 +212,27 @@
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
 <script>
-function toggleSidebar(){
-    const sidebar = document.getElementById('sidebar');
-    const main = document.getElementById('main');
-    const overlay = document.getElementById('sidebarOverlay');
-
-    if (window.innerWidth <= 768) {
-        sidebar.classList.toggle('mobile-open');
-        overlay.classList.toggle('show');
-    } else {
-        sidebar.classList.toggle('collapsed');
-        main.classList.toggle('expanded');
-    }
-}
-
-function closeSidebar(){
-    document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('sidebarOverlay').classList.remove('show');
-}
-
 function changeFollowUpStatus(id, select) {
     const val = select.value;
-    select.className = 'status-select ' + (val === 'done' ? 'status-done' : 'status-pending');
+
+    select.className = 'status-select ' + (
+        val === 'done' ? 'status-done' : 'status-pending'
+    );
+
     fetch(`/followups/${id}/toggle/`, {
         method: 'POST',
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
     })
     .then(r => r.json())
     .then(data => {
         if (!data.success) {
             select.value = val === 'done' ? 'pending' : 'done';
-            select.className = 'status-select ' + (select.value === 'done' ? 'status-done' : 'status-pending');
+
+            select.className = 'status-select ' + (
+                select.value === 'done' ? 'status-done' : 'status-pending'
+            );
         }
     })
     .catch(() => {
@@ -271,10 +249,15 @@ $(document).ready(function() {
             search: "🔍 Search:",
             lengthMenu: "Show _MENU_ entries",
             info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            paginate: { first: "First", last: "Last", next: "Next →", previous: "← Prev" }
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next →",
+                previous: "← Prev"
+            }
         }
     });
 });
 </script>
-</body>
-</html>
+
+{% endblock %}
