@@ -15,6 +15,12 @@ from .models import Ticket, TicketOTP, TicketStats, Customer
 import random
 import csv
 
+# ================= LEAD STATUS HELPER =================
+
+def update_lead_status(lead, status):
+    lead.status = status
+    lead.save()
+
 
 # ================= AUTH =================
 
@@ -158,19 +164,46 @@ def delete_lead(request, id):
 
 
 @login_required
+def lead_to_followup(request, id):
+    lead = get_object_or_404(Lead, id=id)
+
+    FollowUp.objects.create(
+        lead=lead,
+        title=f"Follow Up - {lead.name}",
+        follow_up_date=timezone.now().date(),
+        notes=lead.description or ""
+    )
+
+    update_lead_status(lead, "Contacted")
+
+    messages.success(request, f"{lead.name} added to Follow Ups")
+    return redirect('followups')
+
+@login_required
 def convert_to_customer(request, id):
     if not request.user.is_superuser:
         messages.error(request, "Only admin can convert leads to customers")
-        return redirect('view_lead', id=id)
+        return redirect('followups')
+
     lead = get_object_or_404(Lead, id=id)
+
     if Customer.objects.filter(email=lead.email).exists():
         messages.warning(request, f"{lead.name} is already a customer!")
-        return redirect('view_lead', id=id)
-    Customer.objects.create(lead=lead, name=lead.name, email=lead.email, phone=lead.phone)
-    lead.status = "Won"
+        return redirect('customers')
+
+    Customer.objects.create(
+        lead=lead,
+        name=lead.name,
+        email=lead.email,
+        phone=lead.phone,
+        assigned_to=lead.assigned_to
+    )
+
+    lead.status = "Qualified"
     lead.save()
+
     messages.success(request, f"{lead.name} converted to customer!")
-    return redirect('customers')
+    return redirect('customers')    
 
 
 # ================= CUSTOMERS =================
@@ -200,19 +233,30 @@ def view_customer(request, id):
 def add_customer(request):
     if not request.user.is_superuser:
         return redirect('dashboard')
+
     employees = User.objects.filter(is_superuser=False, is_active=True)
+
     if request.method == "POST":
         assigned_id = request.POST.get('assigned_to')
-        Customer.objects.create(
+
+        customer = Customer.objects.create(
             name=request.POST.get('name'),
             email=request.POST.get('email'),
             phone=request.POST.get('phone'),
             address=request.POST.get('address'),
             assigned_to=User.objects.filter(id=assigned_id).first() if assigned_id else None
         )
+
+        if customer.lead:
+            update_lead_status(customer.lead, "Qualified")
+
         messages.success(request, "Customer added successfully")
         return redirect('customers')
-    return render(request, 'customer_form.html', {'title': 'Add Customer', 'employees': employees})
+
+    return render(request, 'customer_form.html', {
+        'title': 'Add Customer',
+        'employees': employees
+    })
 
 
 @login_required
@@ -251,7 +295,12 @@ def edit_customer(request, id):
 def delete_customer(request, id):
     if not request.user.is_superuser:
         return redirect('dashboard')
+
     customer = get_object_or_404(Customer, id=id)
+
+    if customer.lead:
+        update_lead_status(customer.lead, "Lost")
+
     customer.delete()
     messages.success(request, "Customer deleted")
     return redirect('customers')
@@ -292,14 +341,19 @@ def add_project(request):
     products = Product.objects.all().order_by('name')
 
     if request.method == "POST":
+        customer = get_object_or_404(Customer, id=request.POST.get('customer'))
+
         project = Project.objects.create(
-            customer=get_object_or_404(Customer, id=request.POST.get('customer')),
+            customer=customer,
             title=request.POST.get('title'),
             description=request.POST.get('description'),
             status=request.POST.get('status'),
             start_date=request.POST.get('start_date') or None,
             end_date=request.POST.get('end_date') or None,
         )
+
+        if customer.lead:
+            update_lead_status(customer.lead, "Qualified")
 
         _save_project_products(request, project)
 
@@ -406,7 +460,6 @@ def add_quote(request):
     else:
         leads = Lead.objects.filter(assigned_to=request.user)
 
-    # Products needed for the dropdown in quote form
     products = Product.objects.all().order_by('name')
 
     if request.method == "POST":
@@ -423,13 +476,15 @@ def add_quote(request):
             notes=request.POST.get('notes'),
         )
 
+        update_lead_status(lead, "Qualified")
+
         messages.success(request, "Quote added successfully")
         return redirect('quotes')
 
     return render(request, 'quote_form.html', {
         'title': 'Add Quote',
         'leads': leads,
-        'products': products,    # ← this is what feeds the dropdown
+        'products': products,
     })
 
 
@@ -510,17 +565,29 @@ def view_invoice(request, id):
 def add_invoice(request):
     if not request.user.is_superuser:
         return redirect('dashboard')
+
     customers = Customer.objects.all()
+
     if request.method == "POST":
+        customer = get_object_or_404(Customer, id=request.POST.get('customer'))
+
         Invoice.objects.create(
-            customer=get_object_or_404(Customer, id=request.POST.get('customer')),
+            customer=customer,
             amount=request.POST.get('amount') or 0,
             status=request.POST.get('status'),
             due_date=request.POST.get('due_date') or None,
         )
+
+        if customer.lead:
+            update_lead_status(customer.lead, "Won")
+
         messages.success(request, "Invoice added successfully")
         return redirect('invoices')
-    return render(request, 'invoice_form.html', {'title': 'Add Invoice', 'customers': customers})
+
+    return render(request, 'invoice_form.html', {
+        'title': 'Add Invoice',
+        'customers': customers
+    })
 
 
 @login_required
@@ -554,13 +621,23 @@ def view_followup(request, id):
 
 
 @login_required
-def add_followup(request):
+def add_followup(request, lead_id=None):
     if request.user.is_superuser:
         leads = Lead.objects.all()
     else:
         leads = Lead.objects.filter(assigned_to=request.user)
+
+    selected_lead = None
+    if lead_id:
+        selected_lead = get_object_or_404(Lead, id=lead_id)
+
+        if not request.user.is_superuser and selected_lead.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('followups')
+
     if request.method == "POST":
         lead_id = request.POST.get('lead')
+
         FollowUp.objects.create(
             lead=get_object_or_404(Lead, id=lead_id),
             title=request.POST.get('title'),
@@ -568,9 +645,15 @@ def add_followup(request):
             follow_up_time=request.POST.get('follow_up_time') or None,
             notes=request.POST.get('notes'),
         )
+
         messages.success(request, "Follow up added successfully")
         return redirect('followups')
-    return render(request, 'followup_form.html', {'title': 'Add Follow Up', 'leads': leads})
+
+    return render(request, 'followup_form.html', {
+        'title': 'Add Follow Up',
+        'leads': leads,
+        'selected_lead': selected_lead
+    })
 
 
 @login_required
@@ -1174,6 +1257,55 @@ def products(request):
         'out_of_stock': all_products.filter(quantity=0).count(),
     })
 
+from decimal import Decimal
+
+@login_required
+def add_product(request):
+    if not request.user.is_superuser:
+        return redirect('products')
+
+    if request.method == "POST":
+        Product.objects.create(
+            name=request.POST.get('name', '').strip(),
+            brand=request.POST.get('brand', '').strip(),
+            hsn_code=request.POST.get('hsn_code', '').strip(),
+            unit=request.POST.get('unit', 'pcs'),
+            quantity=Decimal(request.POST.get('quantity') or 0),
+            price=Decimal(request.POST.get('price') or 0),
+            low_stock_alert=Decimal(request.POST.get('low_stock_alert') or 5),
+        )
+        messages.success(request, "Product added successfully")
+        return redirect('products')
+
+    return render(request, 'products_form.html', {
+        'title': 'Add Product'
+    })
+
+
+@login_required
+def edit_product(request, id):
+    if not request.user.is_superuser:
+        return redirect('products')
+
+    product = get_object_or_404(Product, id=id)
+
+    if request.method == "POST":
+        product.name = request.POST.get('name', '').strip()
+        product.brand = request.POST.get('brand', '').strip()
+        product.hsn_code = request.POST.get('hsn_code', '').strip()
+        product.unit = request.POST.get('unit', 'pcs')
+        product.price = Decimal(request.POST.get('price') or 0)
+        product.low_stock_alert = Decimal(request.POST.get('low_stock_alert') or 5)
+        product.save()
+
+        messages.success(request, "Product updated successfully")
+        return redirect('products')
+
+    return render(request, 'products_form.html', {
+        'title': 'Edit Product',
+        'product': product
+    })
+
 
 # ================= AJAX — PRODUCTS =================
 
@@ -1421,6 +1553,8 @@ def add_site_survey(request):
         if request.FILES.get('photo_surroundings'):
             survey.photo_surroundings = request.FILES['photo_surroundings']
         survey.save()
+        if survey.customer and survey.customer.lead:
+            update_lead_status(survey.customer.lead, "Qualified")
  
         messages.success(request, "Site survey added successfully")
         return redirect('site_surveys')

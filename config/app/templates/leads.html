@@ -48,21 +48,10 @@
                     </td>
                     <td>{{ lead.phone }}</td>
                     <td>
-                        {% if request.user.is_superuser %}
-                        <select class="status-select status-{{ lead.status|lower }}"
-                            data-lead-id="{{ lead.id }}"
-                            onchange="changeStatus(this.dataset.leadId, this)">
-                            <option value="New"       {% if lead.status == "New" %}selected{% endif %}>New</option>
-                            <option value="Contacted" {% if lead.status == "Contacted" %}selected{% endif %}>Contacted</option>
-                            <option value="Qualified" {% if lead.status == "Qualified" %}selected{% endif %}>Qualified</option>
-                            <option value="Proposal"  {% if lead.status == "Proposal" %}selected{% endif %}>Proposal</option>
-                            <option value="Won"       {% if lead.status == "Won" %}selected{% endif %}>Won</option>
-                            <option value="Lost"      {% if lead.status == "Lost" %}selected{% endif %}>Lost</option>
-                        </select>
-                        {% else %}
-                        <span class="badge-soft badge-{{ lead.status|lower }}">{{ lead.status }}</span>
-                        {% endif %}
-                    </td>
+    <span class="badge-soft badge-{{ lead.status|lower }}">
+        {{ lead.status }}
+    </span>
+</td>
                     <td>
                         {% if lead.assigned_to %}{{ lead.assigned_to.username }}
                         {% else %}<span class="text-muted">Unassigned</span>{% endif %}
@@ -130,20 +119,7 @@ $(document).ready(function() {
     });
 });
 
-function changeStatus(id, select) {
-    const newStatus = select.value;
-    const oldStatus = select.dataset.old || select.value;
-    select.className = 'status-select status-' + newStatus.toLowerCase();
-    fetch(`/ajax/lead/${id}/status/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `status=${newStatus}`
-    })
-    .then(r => r.json()).then(data => {
-        if (data.success) { showToast(`Status → ${newStatus}!`); select.dataset.old = newStatus; }
-        else { showToast('Failed to update', 'error'); select.value = oldStatus; }
-    }).catch(() => showToast('Network error', 'error'));
-}
+
 
 function deleteLead(id, name) {
     if (!confirm(`Delete lead "${name}"? This cannot be undone.`)) return;

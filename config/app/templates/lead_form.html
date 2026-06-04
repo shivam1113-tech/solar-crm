@@ -320,7 +320,7 @@ window.addEventListener('load', function() {
     }
 });
 
-document.querySelectorAll('input[type="text"], input[type="email"], textarea').forEach(el => {
+document.querySelectorAll('input[type="text"], textarea').forEach(el => {
     el.addEventListener('input', function() {
         let pos = this.selectionStart;
         this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);

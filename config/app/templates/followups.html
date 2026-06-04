@@ -127,17 +127,11 @@
                         {% endif %}
                     </td>
 
-                    <td>
-                        {{ f.follow_up_date }}
-                    </td>
+                    <td>{{ f.follow_up_date }}</td>
 
-                    <td>
-                        {{ f.follow_up_time|default:"—" }}
-                    </td>
+                    <td>{{ f.follow_up_time|default:"—" }}</td>
 
-                    <td>
-                        {{ f.notes|truncatechars:35|default:"—" }}
-                    </td>
+                    <td>{{ f.notes|truncatechars:35|default:"—" }}</td>
 
                     <td>
                         <select
@@ -162,6 +156,14 @@
 
                         <a href="/followups/{{ f.id }}/view/" class="btn btn-sm btn-outline-primary">
                             View
+                        </a>
+
+                        <a href="/lead/{{ f.lead.id }}/convert/"
+                           id="convert-btn-{{ f.id }}"
+                           class="btn btn-sm btn-success"
+                           style="{% if not f.done %}display:none;{% endif %}"
+                           onclick="return confirm('Convert {{ f.lead.name }} to Customer?')">
+                            Convert to Customer
                         </a>
 
                         {% if request.user.is_superuser %}
@@ -213,30 +215,42 @@
 
 <script>
 function changeFollowUpStatus(id, select) {
-    const val = select.value;
-
-    select.className = 'status-select ' + (
-        val === 'done' ? 'status-done' : 'status-pending'
-    );
+    const convertBtn = document.getElementById('convert-btn-' + id);
 
     fetch(`/followups/${id}/toggle/`, {
         method: 'POST',
         headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(r => r.json())
+    .then(response => response.json())
     .then(data => {
-        if (!data.success) {
-            select.value = val === 'done' ? 'pending' : 'done';
+        if (data.success) {
 
-            select.className = 'status-select ' + (
-                select.value === 'done' ? 'status-done' : 'status-pending'
-            );
+            if (data.done === true) {
+                select.value = 'done';
+                select.className = 'status-select status-done';
+
+                if (convertBtn) {
+                    convertBtn.style.display = 'inline-block';
+                }
+
+            } else {
+                select.value = 'pending';
+                select.className = 'status-select status-pending';
+
+                if (convertBtn) {
+                    convertBtn.style.display = 'none';
+                }
+            }
+
+        } else {
+            alert(data.error || 'Status update failed');
         }
     })
     .catch(() => {
-        location.href = `/followups/${id}/toggle/`;
+        alert('Network error. Please refresh and try again.');
     });
 }
 

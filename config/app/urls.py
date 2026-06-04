@@ -17,6 +17,7 @@ urlpatterns = [
     path('add-lead/', views.add_lead, name='add_lead'),
     path('edit-lead/<int:id>/', views.edit_lead, name='edit_lead'),
     path('delete-lead/<int:id>/', views.delete_lead, name='delete_lead'),
+    path('lead/<int:id>/followup/', views.lead_to_followup, name='lead_to_followup'),
     path('lead/<int:id>/convert/', views.convert_to_customer, name='convert_to_customer'),
 
     # 📂 Import
@@ -31,6 +32,9 @@ urlpatterns = [
 
      # 📦 Products
     path('products/', views.products, name='products'),
+    path('products/add/', views.add_product, name='add_product'),
+    path('products/<int:id>/edit/', views.edit_product, name='edit_product'),
+
 
 
     # 🏗️ Projects
@@ -57,6 +61,7 @@ urlpatterns = [
     # 📞 Follow Ups
     path('followups/', views.followups, name='followups'),
     path('followups/add/', views.add_followup, name='add_followup'),
+    path('followups/add/<int:lead_id>/', views.add_followup, name='add_followup_lead'),
     path('followups/<int:id>/view/', views.view_followup, name='view_followup'),
     path('followups/<int:id>/edit/', views.edit_followup, name='edit_followup'),
     path('followups/<int:id>/toggle/', views.toggle_followup, name='toggle_followup'),
