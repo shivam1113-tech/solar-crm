@@ -16,12 +16,10 @@
         <p class="text-muted mb-0">Track all solar projects</p>
     </div>
 
-    {% if request.user.is_superuser %}
     <a href="/projects/add/" class="add-btn">
-        <i class="fa-solid fa-plus"></i>
-        Add Project
-    </a>
-    {% endif %}
+    <i class="fa-solid fa-plus"></i>
+    Add Project
+</a>
 </div>
 
 <div class="panel">
@@ -67,11 +65,11 @@
                     <td>{{ p.end_date|default:"—" }}</td>
 
                     <td>
-                        {% if request.user.is_superuser %}
+                        
                         <a href="/projects/{{ p.id }}/edit/" class="btn btn-sm btn-outline-warning">
                             Edit
                         </a>
-
+                        {% if request.user.is_superuser %}
                         <a href="/projects/{{ p.id }}/delete/"
                            class="btn btn-sm btn-outline-danger"
                            onclick="return confirm('Delete?')">

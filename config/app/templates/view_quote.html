@@ -15,16 +15,12 @@
     margin-bottom: 18px;
 }
 
-.back-btn:hover {
-    color: #1d4ed8;
-}
-
 .card-box {
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 16px;
     padding: 28px;
-    max-width: 600px;
+    max-width: 900px;
 }
 
 .card-header-custom {
@@ -33,77 +29,289 @@
     padding: 20px 24px;
     margin-bottom: 24px;
     display: flex;
-    align-items: center;
+    justify-content: space-between;
     gap: 16px;
 }
 
-.quote-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: #f59e0b;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 24px;
-    flex-shrink: 0;
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
 }
 
 .info-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.info-row:last-child {
-    border-bottom: none;
-}
-
-.info-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: #eff6ff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #2563eb;
-    flex-shrink: 0;
+    padding: 12px;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
 }
 
 .info-label {
     font-size: 11px;
     color: #94a3b8;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 .info-value {
     font-size: 14px;
     color: #111827;
-    font-weight: 500;
-    margin-top: 2px;
+    font-weight: 600;
+    margin-top: 4px;
 }
 
-@media (max-width:768px) {
-    .card-box {
-        max-width: 100%;
-        padding: 20px;
-    }
-
-    .card-header-custom {
-        padding: 18px;
-    }
+.quote-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
 }
 
-@media (max-width:480px) {
-    .card-header-custom {
-        flex-direction: column;
-        align-items: flex-start;
+.quote-table th {
+    background: #071b36;
+    color: white;
+    padding: 12px;
+    font-size: 13px;
+}
+
+.quote-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 13px;
+}
+
+.summary-box {
+    margin-top: 20px;
+    max-width: 360px;
+    margin-left: auto;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+    font-size: 14px;
+}
+
+.summary-row.total {
+    border-top: 2px solid #e5e7eb;
+    margin-top: 8px;
+    padding-top: 12px;
+    font-size: 18px;
+    font-weight: 900;
+    color: #2563eb;
+}
+
+.print-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.print-modal.show {
+    display: flex;
+}
+
+.print-modal-content {
+    background: white;
+    border-radius: 16px;
+    width: 850px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.quote-print {
+    padding: 40px;
+}
+
+.print-header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 22px;
+    margin-bottom: 26px;
+}
+
+.company-name {
+    font-size: 26px;
+    font-weight: 900;
+    color: #071b36;
+}
+
+.company-name span {
+    color: #f59e0b;
+}
+
+.print-tag {
+    background: #071b36;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 8px;
+    display: inline-block;
+}
+
+.print-number h2 {
+    font-size: 28px;
+    font-weight: 900;
+    color: #2563eb;
+    margin: 0;
+}
+
+.print-parties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 26px;
+}
+
+.print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+}
+
+.print-table th {
+    background: #071b36;
+    color: white;
+    padding: 11px;
+    font-size: 12px;
+}
+
+.print-table td {
+    padding: 11px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 12px;
+}
+
+.print-summary {
+    width: 360px;
+    margin-left: auto;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 16px 20px;
+}
+
+.print-summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+}
+
+.print-summary-row.final {
+    border-top: 2px solid #e5e7eb;
+    margin-top: 8px;
+    padding-top: 12px;
+    font-size: 20px;
+    font-weight: 900;
+    color: #2563eb;
+}
+
+.print-footer {
+    margin-top: 30px;
+    font-size: 12px;
+    color: #64748b;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 16px;
+}
+
+@media print {
+    @page {
+        size: A4;
+        margin: 10mm;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    #printArea,
+    #printArea * {
+        visibility: visible;
+    }
+
+    #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    .quote-print {
+        padding: 10px 18px !important;
+        font-size: 11px !important;
+    }
+
+    .print-header {
+        margin-bottom: 12px !important;
+        padding-bottom: 10px !important;
+    }
+
+    .print-parties {
+        margin-bottom: 12px !important;
+    }
+
+    .print-table {
+        margin-bottom: 10px !important;
+    }
+
+    .print-table th,
+    .print-table td {
+        padding: 6px !important;
+        font-size: 10px !important;
+    }
+
+    .print-summary {
+        padding: 8px 12px !important;
+    }
+
+    .print-summary-row {
+        padding: 3px 0 !important;
+        font-size: 11px !important;
+    }
+
+    .print-summary-row.final {
+        font-size: 15px !important;
+        padding-top: 6px !important;
+    }
+
+    .print-footer {
+        margin-top: 10px !important;
+        padding-top: 8px !important;
+        font-size: 9px !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+    body * {
+        visibility: hidden;
+    }
+
+    #printArea,
+    #printArea * {
+        visibility: visible;
+    }
+
+    #printArea {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    .no-print {
+        display: none !important;
     }
 }
 </style>
@@ -119,97 +327,278 @@
 <div class="card-box">
 
     <div class="card-header-custom">
-        <div class="quote-icon">
-            <i class="fa-solid fa-file-invoice"></i>
-        </div>
-
         <div>
-            <div style="color:white;font-weight:800;font-size:18px;">
+            <div style="color:white;font-weight:900;font-size:20px;">
                 Quote #{{ quote.id }}
             </div>
-
             <div style="color:#93c5fd;font-size:13px;">
                 {{ quote.lead.name }}
             </div>
         </div>
+
+        <button class="btn btn-light btn-sm" onclick="openQuotePrint()">
+            <i class="fa-solid fa-print"></i>
+            Print / Save PDF
+        </button>
     </div>
 
-    <div class="info-row">
-        <div class="info-icon">
-            <i class="fa-solid fa-users"></i>
-        </div>
-
-        <div>
+    <div class="info-grid">
+        <div class="info-row">
             <div class="info-label">Lead</div>
             <div class="info-value">{{ quote.lead.name }}</div>
         </div>
-    </div>
 
-    <div class="info-row">
-        <div class="info-icon">
-            <i class="fa-solid fa-indian-rupee-sign"></i>
+        <div class="info-row">
+            <div class="info-label">Phone</div>
+            <div class="info-value">{{ quote.lead.phone }}</div>
         </div>
 
-        <div>
-            <div class="info-label">Amount</div>
-            <div class="info-value">₹{{ quote.amount }}</div>
-        </div>
-    </div>
-
-    <div class="info-row">
-        <div class="info-icon">
-            <i class="fa-solid fa-circle-dot"></i>
+        <div class="info-row">
+            <div class="info-label">Email</div>
+            <div class="info-value">{{ quote.lead.email }}</div>
         </div>
 
-        <div>
+        <div class="info-row">
             <div class="info-label">Status</div>
-
             <div class="info-value">
                 {% if quote.status == 'Accepted' %}
                     <span class="badge bg-success">{{ quote.status }}</span>
-
-                {% elif quote.status == 'Sent' %}
-                    <span class="badge bg-primary">{{ quote.status }}</span>
-
-                {% elif quote.status == 'Draft' %}
-                    <span class="badge bg-secondary">{{ quote.status }}</span>
-
                 {% elif quote.status == 'Rejected' %}
                     <span class="badge bg-danger">{{ quote.status }}</span>
-
+                {% elif quote.status == 'Sent' %}
+                    <span class="badge bg-primary">{{ quote.status }}</span>
                 {% else %}
                     <span class="badge bg-secondary">{{ quote.status }}</span>
                 {% endif %}
             </div>
         </div>
-    </div>
 
-    <div class="info-row">
-        <div class="info-icon">
-            <i class="fa-solid fa-note-sticky"></i>
+        <div class="info-row">
+            <div class="info-label">System Size</div>
+            <div class="info-value">{{ quote.system_kw|default:"—" }} kW</div>
         </div>
 
-        <div>
-            <div class="info-label">Notes</div>
-            <div class="info-value">
-                {{ quote.notes|default:"No notes provided" }}
-            </div>
-        </div>
-    </div>
-
-    <div class="info-row">
-        <div class="info-icon">
-            <i class="fa-regular fa-clock"></i>
-        </div>
-
-        <div>
+        <div class="info-row">
             <div class="info-label">Created On</div>
-            <div class="info-value">
-                {{ quote.created_at|date:"d M Y" }}
-            </div>
+            <div class="info-value">{{ quote.created_at|date:"d M Y" }}</div>
         </div>
     </div>
+
+    <table class="quote-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>GST</th>
+                <th>Line Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in quote.quote_items.all %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>₹{{ item.unit_price|floatformat:2 }}</td>
+                <td>{{ item.gst_percent|floatformat:0 }}%</td>
+                <td>₹{{ item.line_total|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No products added</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary-box">
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <strong>₹{{ quote.amount|floatformat:2 }}</strong>
+        </div>
+
+        <div class="summary-row">
+            <span>Discount</span>
+            <strong>- ₹{{ quote.discount_amount|floatformat:2 }}</strong>
+        </div>
+
+        <div class="summary-row">
+            <span>GST</span>
+            <strong>₹{{ quote.gst_amount|floatformat:2 }}</strong>
+        </div>
+
+        <div class="summary-row">
+            <span>Subsidy</span>
+            <strong>- ₹{{ quote.subsidy_amount|floatformat:2 }}</strong>
+        </div>
+
+        <div class="summary-row total">
+            <span>Final Amount</span>
+            <span>₹{{ quote.final_amount|floatformat:2 }}</span>
+        </div>
+    </div>
+
+    {% if quote.notes %}
+    <div style="margin-top:20px;">
+        <strong>Notes</strong>
+        <p class="text-muted mb-0">{{ quote.notes }}</p>
+    </div>
+    {% endif %}
 
 </div>
 
+<div class="print-modal" id="quotePrintModal">
+    <div class="print-modal-content">
+
+        <div class="no-print" style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #e5e7eb;">
+            <strong>Print Quote</strong>
+            <div style="display:flex;gap:10px;">
+                <button onclick="triggerQuotePrint()" class="btn btn-primary btn-sm">
+                    Print / Save PDF
+                </button>
+                <button onclick="closeQuotePrint()" class="btn btn-outline-secondary btn-sm">
+                    Close
+                </button>
+            </div>
+        </div>
+
+        <div id="printArea">
+            <div class="quote-print">
+
+                <div class="print-header">
+                    <div>
+                        <div class="company-name"><span>SOLAR</span> CRM</div>
+                        <div class="print-tag">QUOTATION</div>
+                        <div style="margin-top:10px;font-size:13px;color:#64748b;">
+                            Solar Energy Solutions<br>
+                            India
+                        </div>
+                    </div>
+
+                    <div class="print-number">
+                        <h2>QT-{{ quote.id }}</h2>
+                        <p>Date: <strong>{{ quote.created_at|date:"d M Y" }}</strong></p>
+                        <p>Status: <strong>{{ quote.status }}</strong></p>
+                    </div>
+                </div>
+
+                <div class="print-parties">
+                    <div>
+    <h4>Quote To</h4>
+
+    <strong>{{ quote.lead.name }}</strong>
+
+<p>{{ quote.lead.email }}</p>
+
+<p>{{ quote.lead.phone }}</p>
+
+{% if quote.lead.customer %}
+<p>
+    {{ quote.lead.customer.address|default:"Address Not Available" }}
+</p>
+{% endif %}
+</div>
+
+                    <div>
+                        <h4>Quote Details</h4>
+                        <p>Quote No: <strong>QT-{{ quote.id }}</strong></p>
+                        <p>System Size: <strong>{{ quote.system_kw|default:"—" }} kW</strong></p>
+                        <p>GST Applied: <strong>{% if quote.apply_gst %}Yes{% else %}No{% endif %}</strong></p>
+                        <p>Subsidy Applied: <strong>{% if quote.apply_subsidy %}Yes{% else %}No{% endif %}</strong></p>
+                    </div>
+                </div>
+
+                <table class="print-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th style="text-align:right;">Qty</th>
+                            <th style="text-align:right;">Unit Price</th>
+                            <th style="text-align:right;">GST</th>
+                            <th style="text-align:right;">Total</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for item in quote.quote_items.all %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ item.product.name }}</td>
+                            <td style="text-align:right;">{{ item.quantity }}</td>
+                            <td style="text-align:right;">₹{{ item.unit_price|floatformat:2 }}</td>
+                            <td style="text-align:right;">{{ item.gst_percent|floatformat:0 }}%</td>
+                            <td style="text-align:right;font-weight:700;">₹{{ item.line_total|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" style="text-align:center;">No products added</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="print-summary">
+                    <div class="print-summary-row">
+                        <span>Subtotal</span>
+                        <strong>₹{{ quote.amount|floatformat:2 }}</strong>
+                    </div>
+
+                    <div class="print-summary-row">
+                        <span>Discount</span>
+                        <strong>₹{{ quote.discount_amount|floatformat:2 }}</strong>
+                    </div>
+
+                    <div class="print-summary-row">
+                        <span>GST</span>
+                        <strong>₹{{ quote.gst_amount|floatformat:2 }}</strong>
+                    </div>
+
+                    <div class="print-summary-row">
+                        <span>Subsidy</span>
+                        <strong>₹{{ quote.subsidy_amount|floatformat:2 }}</strong>
+                    </div>
+
+                    <div class="print-summary-row final">
+                        <span>Final Amount</span>
+                        <span>₹{{ quote.final_amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+
+                {% if quote.notes %}
+                <div style="margin-top:24px;">
+                    <strong>Notes</strong>
+                    <p style="font-size:13px;color:#64748b;">{{ quote.notes }}</p>
+                </div>
+                {% endif %}
+
+                <div class="print-footer">
+                    <p><strong>Terms and Conditions</strong></p>
+                    <p>This quotation is computer generated and valid as per company policy. Final price may vary after site survey and approval.</p>
+                    <p>For queries, contact Solar CRM · India</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openQuotePrint() {
+    document.getElementById('quotePrintModal').classList.add('show');
+}
+
+function closeQuotePrint() {
+    document.getElementById('quotePrintModal').classList.remove('show');
+}
+
+function triggerQuotePrint() {
+    window.print();
+}
+</script>
 {% endblock %}

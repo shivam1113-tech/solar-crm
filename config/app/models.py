@@ -30,7 +30,7 @@ class Lead(models.Model):
 
 
 class Customer(models.Model):
-    lead = models.OneToOneField(Lead, on_delete=models.SET_NULL, null=True, blank=True)
+    lead = models.OneToOneField(Lead, on_delete=models.SET_NULL, null=True, blank=True, related_name='customer')
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=15)
@@ -123,6 +123,17 @@ class Quote(models.Model):
 
     def __str__(self):
         return f"Quote #{self.id} - {self.lead.name}"
+    
+class QuoteItem(models.Model):
+    quote = models.ForeignKey(Quote, on_delete=models.CASCADE, related_name='quote_items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    gst_percent = models.DecimalField(max_digits=5, decimal_places=2, default=12)
+    line_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"{self.product.name} - Quote #{self.quote.id}"    
 
 
 class Invoice(models.Model):

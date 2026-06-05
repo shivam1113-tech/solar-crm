@@ -12,8 +12,11 @@ from django.http import HttpResponseForbidden
 from .models import Product, ProjectProduct
 from .models import SiteSurvey
 from .models import Ticket, TicketOTP, TicketStats, Customer
+from .models import QuoteItem
+from decimal import Decimal
 import random
 import csv
+
 
 # ================= LEAD STATUS HELPER =================
 
@@ -313,8 +316,10 @@ def projects(request):
     if request.user.is_superuser:
         projects = Project.objects.all().order_by('-created_at')
     else:
-        my_customers = Customer.objects.filter(lead__assigned_to=request.user)
-        projects = Project.objects.filter(customer__in=my_customers).order_by('-created_at')
+        projects = Project.objects.filter(
+            customer__assigned_to=request.user
+        ).order_by('-created_at')
+
     return render(request, 'projects.html', {'projects': projects})
 
 
@@ -323,7 +328,7 @@ def view_project(request, id):
     project = get_object_or_404(Project, id=id)
 
     if not request.user.is_superuser:
-        if project.customer.lead.assigned_to != request.user:
+        if project.customer.assigned_to != request.user:
             messages.error(request, "Access denied")
             return redirect('projects')
 
@@ -336,12 +341,16 @@ def add_project(request):
     if request.user.is_superuser:
         customers = Customer.objects.all()
     else:
-        customers = Customer.objects.filter(lead__assigned_to=request.user)
+        customers = Customer.objects.filter(assigned_to=request.user)
 
     products = Product.objects.all().order_by('name')
 
     if request.method == "POST":
         customer = get_object_or_404(Customer, id=request.POST.get('customer'))
+
+        if not request.user.is_superuser and customer.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('projects')
 
         project = Project.objects.create(
             customer=customer,
@@ -356,12 +365,6 @@ def add_project(request):
             update_lead_status(customer.lead, "Qualified")
 
         _save_project_products(request, project)
-
-        if project.status == 'In Progress':
-            success, error = _deduct_stock(project)
-            if not success:
-                messages.error(request, error)
-                return redirect('edit_project', id=project.id)
 
         messages.success(request, "Project added successfully")
         return redirect('projects')
@@ -379,19 +382,25 @@ def edit_project(request, id):
     project = get_object_or_404(Project, id=id)
 
     if not request.user.is_superuser:
-        if project.customer.lead.assigned_to != request.user:
+        if project.customer.assigned_to != request.user:
             messages.error(request, "Access denied")
             return redirect('projects')
 
     if request.user.is_superuser:
         customers = Customer.objects.all()
     else:
-        customers = Customer.objects.filter(lead__assigned_to=request.user)
+        customers = Customer.objects.filter(assigned_to=request.user)
 
     products = Product.objects.all().order_by('name')
 
     if request.method == "POST":
-        project.customer = get_object_or_404(Customer, id=request.POST.get('customer'))
+        customer = get_object_or_404(Customer, id=request.POST.get('customer'))
+
+        if not request.user.is_superuser and customer.assigned_to != request.user:
+            messages.error(request, "Access denied")
+            return redirect('projects')
+
+        project.customer = customer
         project.title = request.POST.get('title')
         project.description = request.POST.get('description')
         project.status = request.POST.get('status')
@@ -399,15 +408,8 @@ def edit_project(request, id):
         project.end_date = request.POST.get('end_date') or None
         project.save()
 
-        # Re-save products if posted
         project.project_products.all().delete()
         _save_project_products(request, project)
-
-        if project.status == 'In Progress':
-            success, error = _deduct_stock(project)
-            if not success:
-                messages.error(request, error)
-                return redirect('edit_project', id=project.id)
 
         messages.success(request, "Project updated")
         return redirect('projects')
@@ -437,7 +439,10 @@ def quotes(request):
     if request.user.is_superuser:
         quotes = Quote.objects.all().order_by('-created_at')
     else:
-        quotes = Quote.objects.filter(lead__assigned_to=request.user).order_by('-created_at')
+        quotes = Quote.objects.filter(
+            lead__assigned_to=request.user
+        ).order_by('-created_at')
+
     return render(request, 'quotes.html', {'quotes': quotes})
 
 
@@ -455,11 +460,7 @@ def view_quote(request, id):
 
 @login_required
 def add_quote(request):
-    if request.user.is_superuser:
-        leads = Lead.objects.all()
-    else:
-        leads = Lead.objects.filter(assigned_to=request.user)
-
+    leads = Lead.objects.all() if request.user.is_superuser else Lead.objects.filter(assigned_to=request.user)
     products = Product.objects.all().order_by('name')
 
     if request.method == "POST":
@@ -469,17 +470,85 @@ def add_quote(request):
             messages.error(request, "Access denied")
             return redirect('quotes')
 
-        Quote.objects.create(
+        product_ids = request.POST.getlist('product_id[]')
+        qtys = request.POST.getlist('product_qty[]')
+        prices = request.POST.getlist('product_price[]')
+        gsts = request.POST.getlist('product_gst[]')
+
+        subtotal = Decimal("0")
+        saved_items = []
+
+        for pid, qty, price, gst in zip(product_ids, qtys, prices, gsts):
+            if pid:
+                qty = Decimal(qty or "1")
+                price = Decimal(price or "0")
+                gst = Decimal(gst or "0")
+
+                base = qty * price
+                gst_amt = base * gst / Decimal("100")
+                line_total = base + gst_amt
+
+                subtotal += line_total
+
+                saved_items.append((pid, qty, price, gst, line_total))
+
+        manual_amount = request.POST.get('manual_amount')
+        if manual_amount:
+            subtotal = Decimal(manual_amount)
+
+        discount_percent = Decimal(request.POST.get('discount_percent') or "0")
+        discount_amount = subtotal * discount_percent / Decimal("100")
+
+        after_discount = subtotal - discount_amount
+
+        apply_gst = bool(request.POST.get('apply_gst'))
+        gst_rate = Decimal(request.POST.get('gst_rate') or "12")
+        gst_amount = after_discount * gst_rate / Decimal("100") if apply_gst else Decimal("0")
+
+        system_kw = Decimal(request.POST.get('system_kw') or "0")
+        apply_subsidy = bool(request.POST.get('apply_subsidy'))
+
+        subsidy_amount = Decimal("0")
+        if apply_subsidy and system_kw > 0:
+            if system_kw <= 3:
+                subsidy_amount = system_kw * Decimal("18000")
+            else:
+                subsidy_amount = Decimal("54000") + ((system_kw - 3) * Decimal("9000"))
+
+        final_amount = after_discount + gst_amount - subsidy_amount
+        if final_amount < 0:
+            final_amount = Decimal("0")
+
+        quote = Quote.objects.create(
             lead=lead,
-            amount=request.POST.get('amount') or 0,
-            status=request.POST.get('status'),
+            amount=subtotal,
+            status=request.POST.get('status') or 'Draft',
             notes=request.POST.get('notes'),
+            system_kw=system_kw or None,
+            discount_percent=discount_percent,
+            discount_amount=discount_amount,
+            gst_rate=int(gst_rate),
+            gst_amount=gst_amount,
+            apply_gst=apply_gst,
+            apply_subsidy=apply_subsidy,
+            subsidy_amount=subsidy_amount,
+            final_amount=final_amount,
+            manual_amount=manual_amount or None,
         )
 
-        update_lead_status(lead, "Qualified")
+        for pid, qty, price, gst, line_total in saved_items:
+            QuoteItem.objects.create(
+                quote=quote,
+                product=get_object_or_404(Product, id=pid),
+                quantity=qty,
+                unit_price=price,
+                gst_percent=gst,
+                line_total=line_total,
+            )
 
+        update_lead_status(lead, "Qualified")
         messages.success(request, "Quote added successfully")
-        return redirect('quotes')
+        return redirect('view_quote', id=quote.id)
 
     return render(request, 'quote_form.html', {
         'title': 'Add Quote',
@@ -493,37 +562,99 @@ def add_quote(request):
 def edit_quote(request, id):
     quote = get_object_or_404(Quote, id=id)
 
-    if not request.user.is_superuser:
-        if quote.lead.assigned_to != request.user:
-            messages.error(request, "Access denied")
-            return redirect('quotes')
+    if not request.user.is_superuser and quote.lead.assigned_to != request.user:
+        messages.error(request, "Access denied")
+        return redirect('quotes')
 
-    if request.user.is_superuser:
-        leads = Lead.objects.all()
-    else:
-        leads = Lead.objects.filter(assigned_to=request.user)
+    leads = Lead.objects.all() if request.user.is_superuser else Lead.objects.filter(assigned_to=request.user)
+    products = Product.objects.all().order_by('name')
 
     if request.method == "POST":
         lead = get_object_or_404(Lead, id=request.POST.get('lead'))
 
-        if not request.user.is_superuser and lead.assigned_to != request.user:
-            messages.error(request, "Access denied")
-            return redirect('quotes')
+        product_ids = request.POST.getlist('product_id[]')
+        qtys = request.POST.getlist('product_qty[]')
+        prices = request.POST.getlist('product_price[]')
+        gsts = request.POST.getlist('product_gst[]')
+
+        subtotal = Decimal("0")
+        saved_items = []
+
+        for pid, qty, price, gst in zip(product_ids, qtys, prices, gsts):
+            if pid:
+                qty = Decimal(qty or "1")
+                price = Decimal(price or "0")
+                gst = Decimal(gst or "0")
+
+                base = qty * price
+                gst_amt = base * gst / Decimal("100")
+                line_total = base + gst_amt
+
+                subtotal += line_total
+                saved_items.append((pid, qty, price, gst, line_total))
+
+        manual_amount = request.POST.get('manual_amount')
+        if manual_amount:
+            subtotal = Decimal(manual_amount)
+
+        discount_percent = Decimal(request.POST.get('discount_percent') or "0")
+        discount_amount = subtotal * discount_percent / Decimal("100")
+        after_discount = subtotal - discount_amount
+
+        apply_gst = bool(request.POST.get('apply_gst'))
+        gst_rate = Decimal(request.POST.get('gst_rate') or "12")
+        gst_amount = after_discount * gst_rate / Decimal("100") if apply_gst else Decimal("0")
+
+        system_kw = Decimal(request.POST.get('system_kw') or "0")
+        apply_subsidy = bool(request.POST.get('apply_subsidy'))
+
+        subsidy_amount = Decimal("0")
+        if apply_subsidy and system_kw > 0:
+            if system_kw <= 3:
+                subsidy_amount = system_kw * Decimal("18000")
+            else:
+                subsidy_amount = Decimal("54000") + ((system_kw - 3) * Decimal("9000"))
+
+        final_amount = after_discount + gst_amount - subsidy_amount
+        if final_amount < 0:
+            final_amount = Decimal("0")
 
         quote.lead = lead
-        quote.amount = request.POST.get('amount') or 0
-        quote.status = request.POST.get('status')
+        quote.amount = subtotal
+        quote.status = request.POST.get('status') or 'Draft'
         quote.notes = request.POST.get('notes')
+        quote.system_kw = system_kw or None
+        quote.discount_percent = discount_percent
+        quote.discount_amount = discount_amount
+        quote.gst_rate = int(gst_rate)
+        quote.gst_amount = gst_amount
+        quote.apply_gst = apply_gst
+        quote.apply_subsidy = apply_subsidy
+        quote.subsidy_amount = subsidy_amount
+        quote.final_amount = final_amount
+        quote.manual_amount = manual_amount or None
         quote.save()
 
+        quote.quote_items.all().delete()
+
+        for pid, qty, price, gst, line_total in saved_items:
+            QuoteItem.objects.create(
+                quote=quote,
+                product=get_object_or_404(Product, id=pid),
+                quantity=qty,
+                unit_price=price,
+                gst_percent=gst,
+                line_total=line_total,
+            )
+
         messages.success(request, "Quote updated successfully")
-        return redirect('view_quote', id=id)
+        return redirect('view_quote', id=quote.id)
 
     return render(request, 'quote_form.html', {
         'quote': quote,
         'title': 'Edit Quote',
         'leads': leads,
-        'products': Product.objects.all().order_by('name'),
+        'products': products,
     })
 
 
@@ -1257,7 +1388,7 @@ def products(request):
         'out_of_stock': all_products.filter(quantity=0).count(),
     })
 
-from decimal import Decimal
+
 
 @login_required
 def add_product(request):
