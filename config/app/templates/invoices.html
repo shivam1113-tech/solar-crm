@@ -187,10 +187,10 @@
 
                     <td>
                         {% if inv.status == 'Paid' %}
-                        <span class="badge bg-success">✅ Paid</span>
+                        <span class="badge bg-success">Paid</span>
 
                         {% elif inv.status == 'Overdue' %}
-                        <span class="badge bg-danger">❌ Overdue</span>
+                        <span class="badge bg-danger">Overdue</span>
 
                         {% else %}
                         <span class="badge bg-warning text-dark">⏳ Unpaid</span>
@@ -382,8 +382,8 @@ $(document).ready(function() {
     };
 
     const labels = {
-        Paid: '✅ Paid',
-        Overdue: '❌ Overdue'
+        Paid: 'Paid',
+        Overdue: 'Overdue'
     };
 
     const color = colors[d.status] || '#f59e0b';
